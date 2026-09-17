@@ -213,6 +213,7 @@ function loadQuestion(){
 function showCurrentQuestion(){
   const answerInput=document.getElementById('answerInput');
   const submitBtn=document.getElementById('submitAnswerBtn');
+  if(submitBtn)submitBtn.style.display='';
   document.getElementById('skillChip').textContent=current.skillLabel;
   document.getElementById('questionText').textContent=current.question;
   document.getElementById('visual').innerHTML=current.visual||'';
@@ -223,10 +224,11 @@ function showCurrentQuestion(){
     answerInput.disabled=true;
     answerInput.placeholder='Complete the column work first';
     if(submitBtn)submitBtn.textContent='Submit Answer';
-  }else if(current.kind==='operationStory'){
+  }else if(current.kind==='operationStory'||current.kind==='matchQuest'){
     answerInput.disabled=true;
     answerInput.style.display='none';
     document.querySelector('.submit-row').style.display='none';
+    if(submitBtn&&current.kind==='matchQuest')submitBtn.style.display='none';
   }else if(submitBtn)submitBtn.textContent='Cast Spell';
   renderOptions(current.options||[]);
   document.querySelector('.submit-row').style.display='flex';
@@ -279,8 +281,18 @@ function checkColumnAddition(){
     const right=got===expected;el.classList.toggle('correct',right);el.classList.toggle('wrong',!right);if(!right)ok=false;
   }
   const status=document.getElementById('columnStatus');
-  if(ok){status.className='column-status good';status.textContent='✓ Perfect regrouping and column work. Your answer is ready — press Submit Answer.';current.columnComplete=true;const ans=document.getElementById('answerInput');ans.value=current.answer;ans.disabled=true;ans.placeholder='Answer ready';const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer';}
-  else{status.className='column-status bad';status.textContent='Not quite yet. Green boxes are correct; check the red boxes and work from the ones column left.';}
+  current.columnComplete=true;
+  if(!ok) current.hadError=true;
+  if(ok){
+    status.className='column-status good';
+    status.textContent='✓ Perfect regrouping and column work. Press Submit Answer.';
+  }else{
+    status.className='column-status bad';
+    status.textContent='Some column entries were incorrect, but you can keep going. This question will be available to retry at the end.';
+  }
+  const ans=document.getElementById('answerInput');
+  ans.value=current.answer;ans.disabled=true;ans.placeholder='Answer ready';
+  const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer';
 }
 
 
@@ -297,7 +309,7 @@ function subtractionInteractionData(a,b){
 }
 function initColumnSubtraction(a,b){
   const A=String(a).padStart(6,'0').split('').map(Number),B=String(b).padStart(6,'0').split('').map(Number);
-  subColumnState={A:A.slice(),B:B.slice(),work:A.slice(),regroupAbove:Array(6).fill(null),changed:Array(6).fill(false),results:Array(6).fill(null),currentIndex:5,complete:false,message:'Start in the ones column.',wrongTap:null};
+  subColumnState={A:A.slice(),B:B.slice(),work:A.slice(),regroupAbove:Array(6).fill(null),changed:Array(6).fill(false),results:Array(6).fill(null),resultCorrect:Array(6).fill(null),currentIndex:5,complete:false,message:'Start in the ones column.',wrongTap:null};
 }
 function subExpectedDigit(i){return subColumnState.work[i]-subColumnState.B[i]}
 function subNeedsBorrow(i){return subColumnState.work[i]<subColumnState.B[i]}
@@ -323,10 +335,11 @@ function renderColumnSubtraction(){
   h+='<div></div><div class="column-rule"></div><div></div>';
   for(let i=0;i<6;i++){
     const solved=s.results[i]!==null,active=i===s.currentIndex&&!s.complete;
-    h+=`<input class="column-result sub-result ${active?'active':''} ${solved?'correct':''}" id="subResult${i}" inputmode="numeric" maxlength="1" ${active?'':'disabled'} value="${solved?s.results[i]:''}" oninput="autoCheckSubColumn(this)" aria-label="answer digit for ${subPlaceLabel(i)} place">`;
+    const solvedClass=solved?(s.resultCorrect[i]===false?'wrong':'correct'):'';
+    h+=`<input class="column-result sub-result ${active?'active':''} ${solvedClass}" id="subResult${i}" inputmode="numeric" maxlength="1" ${active?'':'disabled'} value="${solved?s.results[i]:''}" oninput="autoCheckSubColumn(this)" aria-label="answer digit for ${subPlaceLabel(i)} place">`;
   }
   h+=`</div><div class="sub-current-note">${subColumnInstruction()}</div>`;
-  h+='<div class="column-help">Work from right to left. If the top digit is too small, <strong>tap the digit immediately to its left</strong>. That digit shrinks by 1, and the renamed value appears <span class="borrow-key">in red above the column you are solving</span>. Enter each answer digit and the game will move you on automatically when it is correct.</div><div class="column-status" id="columnStatus">'+(s.message||'')+'</div></div>';
+  h+='<div class="column-help">Work from right to left. If the top digit is too small, <strong>tap the digit immediately to its left</strong>. That digit shrinks by 1, and the renamed value appears <span class="borrow-key">in red above the column you are solving</span>. Enter each answer digit and the game will move you on. If a digit is wrong, it will be marked for review, but you can continue.</div><div class="column-status" id="columnStatus">'+(s.message||'')+'</div></div>';
   return h;
 }
 function refreshSubColumn(){const v=document.getElementById('visual');if(v)v.innerHTML=renderColumnSubtraction();setTimeout(focusSubResult,0)}
@@ -335,11 +348,31 @@ function tapSubBorrow(i){
   if(!current||current.kind!=='columnSubtraction'||!subColumnState||subColumnState.complete)return;
   const s=subColumnState,c=s.currentIndex;
   if(!subNeedsBorrow(c)){
-    s.message=`No regrouping is needed in the ${subPlaceLabel(c)} column. Solve ${s.work[c]} − ${s.B[c]}.`;s.wrongTap=i;refreshSubColumn();setTimeout(()=>{if(subColumnState){subColumnState.wrongTap=null;refreshSubColumn()}},500);return;
+    current.hadError=true;
+    s.message=`No regrouping was needed in the ${subPlaceLabel(c)} column. Keep going — this question will be available to retry.`;
+    s.wrongTap=i;refreshSubColumn();
+    setTimeout(()=>{if(subColumnState){subColumnState.wrongTap=null;refreshSubColumn()}},500);
+    return;
   }
   const donor=c-1;
-  if(i!==donor){s.message='That is not the place to regroup from. Tap the top digit immediately to the left of the highlighted column.';s.wrongTap=i;refreshSubColumn();setTimeout(()=>{if(subColumnState){subColumnState.wrongTap=null;refreshSubColumn()}},500);return;}
-  if(s.work[donor]<=0){s.message='This problem needs regrouping across a zero. Use the Strategy Charm for this one.';refreshSubColumn();return;}
+  if(i!==donor){
+    current.hadError=true;
+    s.wrongTap=i;
+    // Apply the correct regrouping automatically so the student is not blocked.
+    if(s.work[donor]>0){
+      s.work[donor]-=1;s.changed[donor]=true;s.work[c]+=10;s.regroupAbove[c]=s.work[c];
+      s.message=`That was not the correct digit to regroup from. I applied the correct regrouping so you can continue.`;
+    }else{
+      s.message='That was not the correct place to regroup from. Keep going; this question will be available to retry.';
+    }
+    refreshSubColumn();
+    return;
+  }
+  if(s.work[donor]<=0){
+    current.hadError=true;
+    s.message='This problem needs regrouping across a zero. I marked it for retry so you can continue.';
+    refreshSubColumn();return;
+  }
   s.work[donor]-=1;s.changed[donor]=true;s.work[c]+=10;s.regroupAbove[c]=s.work[c];
   s.message=`✓ Correct regrouping: the ${subPlaceLabel(donor)} digit shrank by 1, and ${s.work[c]} now appears in red above the ${subPlaceLabel(c)} column.`;
   refreshSubColumn();
@@ -350,36 +383,40 @@ function autoCheckSubColumn(el){
   if(!el||el.id!==`subResult${i}`)return;
   const raw=el.value.trim();
   if(raw==='')return;
+
   if(subNeedsBorrow(i)){
-    s.message='Regroup first: tap the top digit immediately to the left of the highlighted column.';
-    el.value='';refreshSubColumn();return;
+    current.hadError=true;
+    const donor=i-1;
+    if(donor>=0&&s.work[donor]>0){
+      s.work[donor]-=1;s.changed[donor]=true;s.work[i]+=10;s.regroupAbove[i]=s.work[i];
+    }
   }
+
   const expected=subExpectedDigit(i);
-  if(Number(raw)!==expected){
-    s.message=`Not quite. Recheck ${s.work[i]} − ${s.B[i]} in the ${subPlaceLabel(i)} column.`;
-    el.classList.add('wrong');
-    setTimeout(()=>{if(subColumnState&&!subColumnState.complete&&subColumnState.currentIndex===i){const again=document.getElementById(`subResult${i}`);if(again){again.value='';again.classList.remove('wrong');again.focus()}}},500);
-    const status=document.getElementById('columnStatus');if(status){status.className='column-status bad';status.textContent=s.message}
-    return;
-  }
-  s.results[i]=expected;s.message=`✓ ${s.work[i]} − ${s.B[i]} = ${expected}. Move one column left.`;s.currentIndex--;
+  const got=Number(raw);
+  const right=got===expected;
+  if(!right) current.hadError=true;
+
+  s.results[i]=got;
+  s.resultCorrect[i]=right;
+  s.message=right
+    ? `✓ ${s.work[i]} − ${s.B[i]} = ${expected}. Move one column left.`
+    : `That digit should be ${expected}, but keep going. This question will be available to retry at the end.`;
+
+  s.currentIndex--;
   if(s.currentIndex<0){
     s.complete=true;current.columnComplete=true;
-    s.message='✓ Perfect regrouping and subtraction. Your answer is ready — press Submit Answer.';
+    s.message=current.hadError
+      ? 'You reached the end of the column work. Press Submit Answer to continue; this question is marked for retry.'
+      : '✓ Perfect regrouping and subtraction. Press Submit Answer.';
     const ans=document.getElementById('answerInput');ans.value=current.answer;ans.disabled=true;ans.placeholder='Answer ready';
     const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer';
   }
   refreshSubColumn();
 }
 function checkSubColumn(){
-  if(!current||current.kind!=='columnSubtraction'||!subColumnState)return;
-  const s=subColumnState;if(s.complete)return;const i=s.currentIndex;
-  if(subNeedsBorrow(i)){s.message='Regroup first: tap the top digit immediately to the left of the highlighted column.';refreshSubColumn();return;}
-  const el=document.getElementById(`subResult${i}`),raw=el?el.value.trim():'',expected=subExpectedDigit(i);
-  if(raw===''||Number(raw)!==expected){s.message=`Not quite. Recheck ${s.work[i]} − ${s.B[i]} in the ${subPlaceLabel(i)} column.`;refreshSubColumn();const again=document.getElementById(`subResult${i}`);if(again){again.classList.add('wrong');again.focus()}return;}
-  s.results[i]=expected;s.message=`✓ ${s.work[i]} − ${s.B[i]} = ${expected}. Move one column left.`;s.currentIndex--;
-  if(s.currentIndex<0){s.complete=true;current.columnComplete=true;s.message='✓ Perfect regrouping and subtraction. Your answer is ready — press Submit Answer.';const ans=document.getElementById('answerInput');ans.disabled=true;ans.value=current.answer;ans.placeholder='Answer ready';const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer'}
-  refreshSubColumn();
+  const el=subColumnState&&!subColumnState.complete?document.getElementById(`subResult${subColumnState.currentIndex}`):null;
+  if(el) autoCheckSubColumn(el);
 }
 
 function qAdd(){let a,b,sum,steps;do{a=randInt(12000,489999);b=randInt(11000,389999);sum=a+b;steps=additionSteps(a,b)}while(sum>999999||!steps.some(s=>s.includes('carry 1')));return{kind:'columnAddition',a,b,columnComplete:false,skillLabel:'Standard Column Method — Addition',question:`Use the standard column method to add ${fmt(a)} + ${fmt(b)}. Place any regrouped digits in the small boxes above the columns.`,answer:fmt(sum),options:[],visual:renderColumnAddition(a,b),hint:`<div class="strategy-box"><strong>Column Charm:</strong> line up ones under ones, tens under tens, and so on. Add from right to left. When a column totals 10 or more, write the ones digit below and place the regrouped digit above the next column.</div>${hintSteps(steps)}<div class="hint-step"><strong>Answer:</strong> ${fmt(sum)}</div>`}}
@@ -669,7 +706,8 @@ function chooseStoryOperation(op){
   if(!current||current.kind!=='operationStory')return;
   const status=document.getElementById('operationChoiceStatus');
   if(op!==current.correctOp){
-    if(status){status.style.color='#ffaaaa';status.textContent=op==='+'?'That would combine the amounts. Read the story again: does it ask for a total or what remains?':'That would find a difference. Read the story again: does it ask for a total or what remains?';}
+    current.hadError=true;
+    if(status){status.style.color='#ffaaaa';status.textContent=op==='+'?'That would combine the amounts. Try the other operation; this question will be available to retry.':'That would find a difference. Try the other operation; this question will be available to retry.';}
     return;
   }
 
@@ -679,11 +717,11 @@ function chooseStoryOperation(op){
   const submitBtn=document.getElementById('submitAnswerBtn');
 
   if(op==='+'){
-    current={...current,kind:'columnAddition',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Addition'};
+    current={...current,kind:'columnAddition',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Addition',hadError:!!current.hadError};
     document.getElementById('visual').innerHTML=renderColumnAddition(a,b);
   }else{
     initColumnSubtraction(a,b);
-    current={...current,kind:'columnSubtraction',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Subtraction'};
+    current={...current,kind:'columnSubtraction',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Subtraction',hadError:!!current.hadError};
     document.getElementById('visual').innerHTML=renderColumnSubtraction();
     setTimeout(focusSubResult,0);
   }
@@ -717,11 +755,9 @@ function refreshMatch(){
   if(!matchState)return;
   const input=document.getElementById('answerInput');
   const submitBtn=document.getElementById('submitAnswerBtn');
-  if(matchState.completed&&matchState.mode==='friendly'){
+  if(current&&current.kind==='matchQuest'){
     if(input){input.value='';input.disabled=true;input.style.display='none';}
-    if(submitBtn)submitBtn.textContent='Submit Matches';
-  }else if(matchState.completed){
-    if(input)input.placeholder='Type the unmatched result';
+    if(submitBtn)submitBtn.style.display='none';
   }
 }
 function selectMatchLeft(i){
@@ -732,6 +768,27 @@ function selectMatchLeft(i){
     : 'Good. Now choose the result that matches this scroll.';
   refreshMatch();
 }
+function completeFinalMatchAutomatically(){
+  if(!current||current.kind!=='matchQuest'||locked)return;
+  locked=true;
+  const ok=!(matchState&&matchState.hadError);
+  if(ok){
+    streak++;score+=10+Math.min(streak-1,4)*2;
+    setFeedback(`✨ All three matches are correct! +${10+Math.min(streak-1,4)*2}`,true);
+  }else{
+    streak=0;
+    if(!retryMode){
+      wrong++;score=Math.max(0,score-2);
+      const snap=makeRetrySnapshot(current);if(snap)missedQuestions.push(snap);
+    }else{
+      const snap=makeRetrySnapshot(current);if(snap)retryAgain.push(snap);
+    }
+    setFeedback('You finished the matching ward. A missed match was recorded so you can retry it at the end.',false);
+  }
+  addHistory('matching completed',ok);updateHUD();
+  setTimeout(()=>{ if(retryMode) loadRetryQuestion(); else loadQuestion(); }, ok?1200:1900);
+}
+
 function selectMatchRight(j){
   if(!matchState||matchState.completed||matchState.selectedLeft===null)return;
   const i=matchState.selectedLeft,p=matchState.pairs[i];
@@ -741,21 +798,18 @@ function selectMatchRight(j){
     const used=new Set(Object.values(matchState.matched));
     if(Object.keys(matchState.matched).length===matchState.pairs.length){
       matchState.completed=true;
-      if(matchState.mode==='friendly'){
-        matchState.message='✨ All three equivalent sums are matched correctly. Press Submit Matches to continue.';
-      }else{
-        matchState.leftoverIndex=matchState.right.findIndex((_,idx)=>!used.has(idx));
-        matchState.message=`All three matches are correct. One result has no scroll. Type that unmatched result to restore the final staircase.`;
-      }
-    }else{
-      matchState.message=matchState.mode==='friendly'
-        ? '✓ Correct. Choose another equation.'
-        : 'Correct match. Keep going.';
+      matchState.leftoverIndex=matchState.right.findIndex((_,idx)=>!used.has(idx));
+      matchState.message=`✨ All three matches are complete. ${matchState.right[matchState.leftoverIndex]} is the unused result — no extra entry needed.`;
+      refreshMatch();
+      setTimeout(completeFinalMatchAutomatically,650);
+      return;
     }
+    matchState.message='Correct match. Keep going.';
   }else{
-    matchState.message=matchState.mode==='friendly'
-      ? 'Not quite. If the given addend went up, the missing addend must go down by exactly the same amount.'
-      : 'Not that one. Round both numbers first, then add or subtract the rounded values.';
+    matchState.hadError=true;
+    if(current) current.hadError=true;
+    matchState.selectedLeft=null;
+    matchState.message='Not that one. Keep going — this match is marked for review, and you may choose any scroll next.';
   }
   refreshMatch();
 }
@@ -764,7 +818,7 @@ function qFinalMatch(){const pairs=[
  {prompt:'Estimate 47,680 + 31,420 to the nearest ten thousand',answer:'80,000'},
  {prompt:'Estimate 62,450 − 18,320 to the nearest thousand',answer:'44,000'},
  {prompt:'Estimate 23,760 + 15,240 to the nearest thousand',answer:'39,000'}
-];const leftover='51,000';const right=shuffle([...pairs.map(p=>p.answer),leftover]);matchState={pairs:shuffle(pairs),right,leftover,selectedLeft:null,matched:{},completed:false,leftoverIndex:-1,message:'Click one estimation scroll on the left, then click its matching result on the right.'};return{kind:'matchQuest',skillLabel:'Room of Requirement — Estimation Match',question:'Match each addition or subtraction estimation scroll to its result. One result will be left unmatched. Type the leftover result to finish the quest.',answer:leftover,acceptableAnswers:[leftover,leftover.replace(',','')],options:[],visual:renderMatch(),placeholder:'Finish the matches first',hint:hintSteps([`Round each number to the place named on the scroll.`,`Then add or subtract the rounded numbers — not the original numbers.`,`Match the three estimation scrolls. The single unused result is the final answer.`])}}
+];const leftover='51,000';const right=shuffle([...pairs.map(p=>p.answer),leftover]);matchState={pairs:shuffle(pairs),right,leftover,selectedLeft:null,matched:{},completed:false,leftoverIndex:-1,hadError:false,message:'Click one estimation scroll on the left, then click its matching result on the right.'};return{kind:'matchQuest',skillLabel:'Room of Requirement — Estimation Match',question:'Match each addition or subtraction estimation scroll to its result. One result will be left unmatched.',answer:'all matches complete',acceptableAnswers:['all matches complete'],options:[],visual:renderMatch(),placeholder:'Complete the matches',hint:hintSteps([`Round each number to the place named on the scroll.`,`Then add or subtract the rounded numbers — not the original numbers.`,`Match the three estimation scrolls. The unused result will reveal itself automatically.`])}}
 
 function makeRetrySnapshot(q){
   if(!q)return null;
@@ -778,6 +832,7 @@ function prepareRetryQuestion(snap){
   if(!snap)return null;
   if(snap.kind==='matchQuestReplay')return qFinalMatch();
   const q=JSON.parse(JSON.stringify(snap));
+  q.hadError=false;
   if(q.kind==='columnAddition'){
     q.columnComplete=false;q.visual=renderColumnAddition(q.a,q.b);
   }
@@ -813,7 +868,7 @@ function finishRetrySession(){
   document.getElementById('endScreen').classList.remove('hidden');
   document.getElementById('endSummary').textContent=still===0?`You corrected all ${total} missed question${total===1?'':'s'}!`:`You corrected ${corrected} of ${total} missed questions.`;
   document.getElementById('endMessage').textContent=still===0?'Excellent — every missed staircase ward is now restored.':'A few are still tricky. You can retry just those questions again.';
-  const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=still?'inline-block':'none';btn.textContent=still?`↺ Retry ${still} Still Missed`:'↺ Retry Missed Questions'};
+  const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=still?'inline-block':'none';btn.textContent=still?`↺ Return to Game — Retry ${still} Still Incorrect`:'↺ Return to Game — Retry Incorrect Questions'};
   renderHistory();
 }
 function checkAnswer(){
@@ -829,7 +884,8 @@ function checkAnswer(){
   if(!raw){setFeedback('Choose a spell tile or type an answer first.',false);return}
   locked=true;
   const acceptable=current.acceptableAnswers||[current.answer];
-  const ok=acceptable.some(a=>norm(a)===norm(raw));
+  const answerMatches=acceptable.some(a=>norm(a)===norm(raw));
+  const ok=answerMatches&&!current.hadError;
   if(ok){
     streak++;score+=10+Math.min(streak-1,4)*2;
     setFeedback(retryMode?'✨ Corrected! That staircase ward is secure.':`✨ Correct! The staircase snaps back into place. +${10+Math.min(streak-1,4)*2}`,true)
@@ -837,10 +893,10 @@ function checkAnswer(){
     streak=0;
     if(!retryMode){wrong++;score=Math.max(0,score-2);const snap=makeRetrySnapshot(current);if(snap)missedQuestions.push(snap)}
     else{const snap=makeRetrySnapshot(current);if(snap)retryAgain.push(snap)}
-    setFeedback(`🌀 Not this time. Correct answer: ${current.answer}.`,false);document.getElementById('hintBody').classList.add('active')
+    setFeedback(answerMatches&&current.hadError?`🌀 You reached the correct final answer, but an earlier entry was incorrect. Keep going — this question is saved for retry.`:`🌀 Not this time. Correct answer: ${current.answer}.`,false);document.getElementById('hintBody').classList.add('active')
   }
   addHistory(raw,ok);updateHUD();
-  setTimeout(loadQuestion,ok?1350:3300)
+  setTimeout(()=>{if(retryMode)loadRetryQuestion();else loadQuestion()},ok?1200:1900)
 }
 function setFeedback(t,ok){const f=document.getElementById('feedback');f.textContent=t;f.className='feedback '+(ok?'good':'bad')}
 function addHistory(user,ok){historyLog.push({time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),skill:current.skillLabel,question:current.question,user,answer:current.answer,correct:ok});historyLog=historyLog.slice(-100);localStorage.setItem('unit2StairHistory',JSON.stringify(historyLog));renderHistory()}
@@ -848,7 +904,7 @@ function renderHistory(){const html=historyLog.length?historyLog.slice().reverse
 function toggleHint(){document.getElementById('hintBody').classList.toggle('active')}
 function toggleHistory(which){const id=which==='home'?'homeHistory':which==='end'?'endHistory':'gameHistory';document.getElementById(id).classList.toggle('active')}
 function resetHistory(){localStorage.removeItem('unit2StairHistory');historyLog=[];renderHistory()}
-function endGame(){document.getElementById('gameScreen').classList.add('hidden');document.getElementById('endScreen').classList.remove('hidden');document.getElementById('endSummary').textContent=`You earned ${score} House Points and restored ${totalRounds-wrong} of ${totalRounds} wards on the first try.`;document.getElementById('endMessage').textContent=wrong===0?'Perfect run — every staircase held firm.':wrong<=1?'Excellent work. Retry the missed questions to lock in the strategies.':'The castle is restored. Retry the missed questions and use the Strategy Charms to strengthen the trickier wards.';const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=missedQuestions.length?'inline-block':'none';btn.textContent=missedQuestions.length?`↺ Retry ${missedQuestions.length} Missed Question${missedQuestions.length===1?'':'s'}`:'↺ Retry Missed Questions'}renderHistory()}
+function endGame(){document.getElementById('gameScreen').classList.add('hidden');document.getElementById('endScreen').classList.remove('hidden');document.getElementById('endSummary').textContent=`You earned ${score} House Points and restored ${totalRounds-wrong} of ${totalRounds} wards on the first try.`;document.getElementById('endMessage').textContent=wrong===0?'Perfect run — every staircase held firm.':wrong<=1?'Excellent work. Retry the missed questions to lock in the strategies.':'The castle is restored. Retry the missed questions and use the Strategy Charms to strengthen the trickier wards.';const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=missedQuestions.length?'inline-block':'none';btn.textContent=missedQuestions.length?`↺ Return to Game — Retry ${missedQuestions.length} Incorrect Question${missedQuestions.length===1?'':'s'}`:'↺ Return to Game — Retry Incorrect Questions'}renderHistory()}
 historyLog=JSON.parse(localStorage.getItem('unit2StairHistory')||'[]');renderHistory();
 </script>
 </body>
