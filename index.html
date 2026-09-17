@@ -745,7 +745,7 @@ function selectMatchRight(j){
         matchState.message='✨ All three equivalent sums are matched correctly. Press Submit Matches to continue.';
       }else{
         matchState.leftoverIndex=matchState.right.findIndex((_,idx)=>!used.has(idx));
-        matchState.message=`All six matches are correct. One result has no scroll. Type that unmatched result to restore the final staircase.`;
+        matchState.message=`All three matches are correct. One result has no scroll. Type that unmatched result to restore the final staircase.`;
       }
     }else{
       matchState.message=matchState.mode==='friendly'
@@ -763,11 +763,8 @@ function selectMatchRight(j){
 function qFinalMatch(){const pairs=[
  {prompt:'Estimate 47,680 + 31,420 to the nearest ten thousand',answer:'80,000'},
  {prompt:'Estimate 62,450 − 18,320 to the nearest thousand',answer:'44,000'},
- {prompt:'Estimate 23,760 + 15,240 to the nearest thousand',answer:'39,000'},
- {prompt:'Estimate 91,300 − 46,700 to the nearest ten thousand',answer:'40,000'},
- {prompt:'Estimate 68,430 + 20,880 to the nearest thousand',answer:'89,000'},
- {prompt:'Estimate 74,550 − 32,180 to the nearest thousand',answer:'43,000'}
-];const leftover='51,000';const right=shuffle([...pairs.map(p=>p.answer),leftover]);matchState={pairs:shuffle(pairs),right,leftover,selectedLeft:null,matched:{},completed:false,leftoverIndex:-1,message:'Click one estimation scroll on the left, then click its matching result on the right.'};return{kind:'matchQuest',skillLabel:'Room of Requirement — Estimation Match',question:'Match each addition or subtraction estimation scroll to its result. One result will be left unmatched. Type the leftover result to finish the quest.',answer:leftover,acceptableAnswers:[leftover,leftover.replace(',','')],options:[],visual:renderMatch(),placeholder:'Finish the matches first',hint:hintSteps([`Round each number to the place named on the scroll.`,`Then add or subtract the rounded numbers — not the original numbers.`,`Match all six estimation scrolls. The single unused result is the final answer.`])}}
+ {prompt:'Estimate 23,760 + 15,240 to the nearest thousand',answer:'39,000'}
+];const leftover='51,000';const right=shuffle([...pairs.map(p=>p.answer),leftover]);matchState={pairs:shuffle(pairs),right,leftover,selectedLeft:null,matched:{},completed:false,leftoverIndex:-1,message:'Click one estimation scroll on the left, then click its matching result on the right.'};return{kind:'matchQuest',skillLabel:'Room of Requirement — Estimation Match',question:'Match each addition or subtraction estimation scroll to its result. One result will be left unmatched. Type the leftover result to finish the quest.',answer:leftover,acceptableAnswers:[leftover,leftover.replace(',','')],options:[],visual:renderMatch(),placeholder:'Finish the matches first',hint:hintSteps([`Round each number to the place named on the scroll.`,`Then add or subtract the rounded numbers — not the original numbers.`,`Match the three estimation scrolls. The single unused result is the final answer.`])}}
 
 function makeRetrySnapshot(q){
   if(!q)return null;
@@ -828,7 +825,7 @@ function checkAnswer(){
   const raw=(current.kind==='columnSubtraction'||current.kind==='columnAddition')&&current.columnComplete
       ? current.answer
       : input.value.trim();
-  if(current.kind==='matchQuest'&&matchState&&!matchState.completed){setFeedback('Match all six scrolls first. Then enter the leftover result.',false);return}
+  if(current.kind==='matchQuest'&&matchState&&!matchState.completed){setFeedback('Match all three scrolls first. Then enter the leftover result.',false);return}
   if(!raw){setFeedback('Choose a spell tile or type an answer first.',false);return}
   locked=true;
   const acceptable=current.acceptableAnswers||[current.answer];
