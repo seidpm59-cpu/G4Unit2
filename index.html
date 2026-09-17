@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hogwarts Arithmetic Quest: The Vanishing Staircase</title>
+<style>
+:root{
+  --ink:#f8f2d5;--muted:#d0c8ec;--gold:#f5d76e;--gold2:#ffc83d;--deep:#0e1023;
+  --panel:rgba(15,13,38,.82);--blue:#67c8ff;--green:#86efa2;--red:#ff9292;--violet:#806ee8;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);text-align:center;overflow-x:hidden;
+ background:radial-gradient(circle at 15% 8%,rgba(245,215,110,.16),transparent 27%),radial-gradient(circle at 88% 15%,rgba(103,200,255,.13),transparent 23%),linear-gradient(145deg,#0a1022,#211a38 52%,#0c0a18)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;background-image:radial-gradient(circle,rgba(255,255,255,.5) 0 1px,transparent 1.6px),radial-gradient(circle,rgba(245,215,110,.4) 0 1px,transparent 1.5px);background-size:77px 77px,121px 121px;animation:stars 22s linear infinite}
+@keyframes stars{to{background-position:154px -154px,-121px 121px}}
+.screen{max-width:1080px;margin:auto;padding:22px 16px 36px;position:relative;z-index:1}.hidden{display:none!important}
+.hero,.arena,.final-card{background:linear-gradient(180deg,rgba(33,27,64,.9),rgba(10,9,26,.9));border:1px solid rgba(245,215,110,.3);box-shadow:0 24px 70px rgba(0,0,0,.4);border-radius:24px}
+.hero{padding:25px 20px;margin:12px auto 18px;max-width:970px}.arena{padding:18px;position:relative;overflow:hidden}.final-card{max-width:800px;margin:18px auto;padding:23px}
+h1{font-size:clamp(34px,6vw,60px);line-height:.98;margin:7px 0 9px;text-shadow:0 0 18px rgba(245,215,110,.42)}h2{font-size:clamp(27px,4vw,42px);margin:8px 0;color:var(--gold)}
+.tagline{font-size:20px;color:#f0e5a7;max-width:760px;margin:7px auto}.mission{color:var(--muted);max-width:820px;margin:8px auto;line-height:1.5}
+button{border:0;border-radius:14px;padding:12px 17px;margin:6px;color:#fff;font-size:16px;font-weight:850;cursor:pointer;background:linear-gradient(135deg,#5b4aa5,#806ee8);box-shadow:0 8px 18px rgba(0,0,0,.27);transition:.12s}
+button:hover{transform:translateY(-1px);filter:brightness(1.07)}button:active{transform:translateY(1px)}.start-btn{font-size:20px;padding:15px 27px;background:linear-gradient(135deg,#a87508,#ffd455,#946108);color:#241400}.ghost-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);box-shadow:none}
+.mini-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;max-width:900px;margin:18px auto}.feature{padding:14px;border-radius:17px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.12);line-height:1.35}.feature strong{display:block;color:var(--gold);margin-bottom:5px}
+.hud{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;margin:10px auto 12px}.hud-card{padding:10px;border-radius:16px;background:var(--panel);border:1px solid rgba(255,255,255,.13)}.hud-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.hud-value{font-size:22px;font-weight:950;color:var(--gold);margin-top:2px}
+.stair-map{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;max-width:900px;margin:10px auto 14px}.step{min-height:46px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative}.step:after{content:attr(data-room);position:absolute;bottom:2px;font-size:8px;color:rgba(255,255,255,.52);text-transform:uppercase}.step.open{background:linear-gradient(135deg,#f5d76e,#ffb83d);color:#1d1224;box-shadow:0 0 16px rgba(245,215,110,.35)}.step.missed{background:rgba(255,146,146,.16);border-color:rgba(255,146,146,.5)}
+.castle-meter{height:62px;position:relative;max-width:900px;margin:auto}.staircase{position:absolute;left:0;top:8px;font-size:38px;transition:left .45s ease;filter:drop-shadow(0 0 8px rgba(245,215,110,.35))}.tower{position:absolute;right:8px;top:9px;font-size:40px}.trail{position:absolute;left:48px;right:58px;top:34px;height:4px;background:linear-gradient(90deg,#ff9292,#f5d76e,#86efa2);border-radius:99px;opacity:.7}
+.challenge-chip{display:inline-flex;padding:7px 12px;border-radius:999px;background:rgba(245,215,110,.12);border:1px solid rgba(245,215,110,.27);color:#fff0a6;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.question{font-size:clamp(22px,3vw,33px);font-weight:850;line-height:1.28;max-width:920px;margin:15px auto 12px}.visual{min-height:120px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;margin:10px auto 12px}
+.scroll{max-width:880px;width:100%;color:#221707;background:linear-gradient(180deg,#f8e9b8,#d8b96e);border:3px solid #986617;border-radius:18px;padding:18px;box-shadow:0 8px 0 #72480c,0 15px 28px rgba(0,0,0,.3);font-weight:900;font-size:clamp(19px,3vw,32px);line-height:1.35}
+.algorithm{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:14px 22px;display:inline-block;min-width:300px;text-align:right;font-size:clamp(25px,4vw,39px);line-height:1.25}.algorithm .line{border-top:3px solid rgba(255,255,255,.75);margin-top:4px;padding-top:5px}.algorithm .op{float:left;color:var(--gold)}
+
+.column-method{width:min(100%,760px);margin:8px auto 2px;padding:16px 16px 14px;border-radius:18px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.14)}
+.column-title{font-weight:950;color:var(--gold);margin-bottom:11px;letter-spacing:.02em}.column-grid{display:grid;grid-template-columns:42px repeat(6,minmax(42px,72px));justify-content:center;align-items:center;gap:5px}.column-place{font-size:10px;color:var(--muted);font-weight:850;text-transform:uppercase;line-height:1.05;min-height:24px;display:flex;align-items:flex-end;justify-content:center}.column-op{font-size:25px;color:var(--gold);font-weight:950}.column-digit{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:28px;font-weight:850;min-height:40px;display:flex;align-items:center;justify-content:center}.column-carry,.column-result{width:42px;height:39px;border-radius:8px;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);color:#fff;text-align:center;font:800 22px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:0;margin:0}.column-carry{height:30px;font-size:18px;color:#ff8fc2;border-color:rgba(255,143,194,.38);background:rgba(255,143,194,.08)}.column-carry.correct,.column-result.correct{border-color:#78e3a2;background:rgba(120,227,162,.16)}.column-carry.wrong,.column-result.wrong{border-color:#ff9292;background:rgba(255,146,146,.14)}.column-rule{grid-column:2 / span 6;border-top:3px solid rgba(255,255,255,.72);height:2px;margin:0 0 3px}.column-help{margin:12px auto 0;color:#d7cfeb;font-size:14px;line-height:1.4}.column-check{margin-top:11px;background:#7566c7}.column-status{margin-top:9px;font-weight:850;min-height:22px}.column-status.good{color:#8ff0ae}.column-status.bad{color:#ffaaaa}@media(max-width:650px){.column-grid{grid-template-columns:30px repeat(6,minmax(32px,1fr));gap:3px}.column-place{font-size:8px}.column-digit{font-size:22px}.column-carry,.column-result{width:34px;height:35px;font-size:19px}.column-carry{height:28px;font-size:16px}}.sub-top-cell{position:relative;min-height:54px;display:flex;align-items:flex-end;justify-content:center;border:2px solid transparent;border-radius:9px;background:transparent;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:28px;font-weight:850;padding:0 0 4px;cursor:pointer}.sub-top-cell:hover{background:rgba(255,255,255,.06)}.sub-top-cell.focus{border-color:rgba(245,215,110,.8);background:rgba(245,215,110,.09);box-shadow:0 0 14px rgba(245,215,110,.13)}.sub-top-cell.changed{color:#ff8f8f}.sub-top-cell.wrong-tap{animation:wrongtap .28s ease 0s 2 alternate;border-color:#ff9292}.sub-regroup{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:17px;line-height:1;color:#ff6f91;font-weight:950;text-shadow:0 0 8px rgba(255,111,145,.45)}.sub-original{display:inline-block}.sub-current-note{margin:10px auto 0;max-width:760px;padding:9px 12px;border-radius:9px;background:rgba(245,215,110,.08);border:1px solid rgba(245,215,110,.22);color:#f5e8b4;font-weight:800}.sub-result.active{border-color:#f5d76e;box-shadow:0 0 12px rgba(245,215,110,.22)}.sub-result:disabled{opacity:.92}.borrow-key{color:#ff8f8f;font-weight:900}@keyframes wrongtap{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+
+.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:900px;margin:13px auto 3px}.option-btn{min-height:58px;background:rgba(255,255,255,.085);border:1px solid rgba(255,255,255,.15);font-size:clamp(16px,2vw,20px)}.option-btn:hover{background:rgba(245,215,110,.18)}
+.submit-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}input{width:min(92%,550px);padding:13px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.2);font-size:20px;text-align:center;background:#fff;color:#14142a;outline:none;box-shadow:0 8px 18px rgba(0,0,0,.22)}input:focus{box-shadow:0 0 0 3px rgba(245,215,110,.32),0 8px 18px rgba(0,0,0,.22)}
+.feedback{min-height:48px;margin:13px auto 0;font-size:20px;font-weight:900;line-height:1.4}.good{color:#9dffad}.bad{color:#ffb0b0}
+.hint-card,.history-card{max-width:960px;margin:16px auto 0;padding:12px 14px;border-radius:16px;background:rgba(10,8,28,.64);border:1px solid rgba(245,215,110,.2);text-align:left}.hint-header,.history-header{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;user-select:none}.hint-title,.history-title{font-size:14px;color:#f7d774;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.hint-body,.history-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);color:#e8dfff;line-height:1.5}.hint-body.active,.history-body.active{display:block}.hint-step{margin:8px 0}.strategy-box{padding:10px 12px;background:rgba(103,200,255,.1);border:1px solid rgba(103,200,255,.22);border-radius:13px;margin:9px 0}.history-line{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:14px}.history-meta{font-size:12px;color:rgba(255,255,255,.65);font-style:italic;margin-top:3px}
+.rounding-track{width:min(94%,850px);padding:14px}.rounding-bar{height:8px;background:linear-gradient(90deg,#6b75ff,#f5d76e,#80e69c);border-radius:99px;position:relative;margin:22px 14px 8px}.rounding-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid #f5d76e;box-shadow:0 0 12px rgba(245,215,110,.6)}.round-labels{display:flex;justify-content:space-between;color:#f9e79f;font-weight:850}.round-caption{color:#d7cff6;font-size:13px;margin-top:7px}
+.interactive-rounding{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.11);border-radius:16px;margin:8px auto}.round-slider{width:calc(100% - 28px);margin:18px 14px 7px;appearance:none;-webkit-appearance:none;height:9px;border-radius:99px;background:linear-gradient(90deg,#6b75ff,#f5d76e,#80e69c);outline:none;cursor:pointer}.round-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:5px solid #f5d76e;box-shadow:0 0 13px rgba(245,215,110,.7);cursor:grab}.round-slider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:5px solid #f5d76e;box-shadow:0 0 13px rgba(245,215,110,.7);cursor:grab}.round-live{display:inline-block;min-width:95px;padding:5px 10px;border-radius:999px;background:rgba(245,215,110,.14);border:1px solid rgba(245,215,110,.25);color:#fff2a6;font-weight:950;margin-top:6px}.rounding-feedback{min-height:22px;margin-top:8px;font-size:14px;font-weight:850}.rounding-feedback.good{color:#91f5a5}.rounding-feedback.bad{color:#ffaaa7}.rounding-summary{width:min(94%,850px);margin:4px auto 8px;padding:10px 12px;border-radius:14px;background:rgba(103,200,255,.09);border:1px solid rgba(103,200,255,.2);color:#dff6ff;font-weight:850;min-height:22px}
+.match-board{display:grid;grid-template-columns:1.25fr .9fr;gap:16px;width:min(100%,950px);margin:auto;align-items:start}.match-column{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px}.match-heading{color:#f7d774;font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px}.match-card{width:100%;display:block;margin:7px 0;padding:11px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);color:#fff;font-size:clamp(15px,2vw,19px);font-weight:900;text-align:center;cursor:pointer}.match-card.left{color:#241706;background:linear-gradient(180deg,#f7e8b5,#d8b96d);border-color:#9b6c18}.match-card.selected{outline:4px solid rgba(103,200,255,.68);box-shadow:0 0 18px rgba(103,200,255,.28)}.match-card.matched{opacity:.4;text-decoration:line-through;pointer-events:none}.match-card.leftover{background:linear-gradient(135deg,#f5d76e,#ffcc33);color:#201000;border-color:#fff1a8;animation:pulse 1s ease-in-out infinite alternate}.match-status{max-width:850px;margin:10px auto 0;padding:10px 12px;border-radius:14px;background:rgba(103,200,255,.1);border:1px solid rgba(103,200,255,.23);font-weight:800;line-height:1.4}
+@keyframes pulse{from{filter:drop-shadow(0 0 3px rgba(245,215,110,.25))}to{filter:drop-shadow(0 0 14px rgba(245,215,110,.78))}}
+@media(max-width:780px){.hud{grid-template-columns:repeat(2,1fr)}.mini-grid{grid-template-columns:1fr 1fr}.options{grid-template-columns:1fr}.match-board{grid-template-columns:1fr}.stair-map{grid-template-columns:repeat(5,1fr)}}
+
+/* Break-Apart Crystal activity */
+.breakapart-lab{
+  max-width:920px;margin:10px auto 0;padding:14px;border-radius:18px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.11);
+}
+.ba-equation{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:8px 0 14px}
+.ba-number{
+  min-width:150px;padding:14px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.16);
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  color:#fff;font-size:30px;font-weight:900;letter-spacing:.5px;cursor:pointer;
+}
+.ba-number.demo{border-color:rgba(103,200,255,.5)}
+.ba-number.user{border-color:rgba(245,215,110,.48)}
+.ba-number:disabled{opacity:.55;cursor:default}
+.ba-plus{font-size:32px;font-weight:900;color:#f5d76e}
+.ba-instruction{font-weight:800;line-height:1.45;margin:8px auto 12px;max-width:760px;color:#e9e5ff}
+.ba-shards{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;min-height:56px;margin:8px 0 14px}
+.ba-shard{
+  min-width:86px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
+  background:linear-gradient(145deg,rgba(103,200,255,.15),rgba(255,255,255,.04));
+  color:#fff;font-weight:900;font-size:18px;
+}
+.ba-shard.fall{animation:glassFall .58s cubic-bezier(.2,.8,.25,1) both}
+@keyframes glassFall{
+  0%{opacity:0;transform:translateY(-30px) rotate(-8deg) scale(.75)}
+  65%{opacity:1;transform:translateY(6px) rotate(3deg) scale(1.03)}
+  100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}
+}
+.ba-digits{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 0}
+.ba-digit{
+  width:58px;height:58px;border-radius:14px;border:2px solid rgba(245,215,110,.40);
+  background:rgba(245,215,110,.08);color:#fff;font-size:25px;font-weight:900;cursor:pointer;
+}
+.ba-digit.done{opacity:.35;text-decoration:line-through;cursor:default}
+.ba-choices{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;min-height:52px;margin:8px 0 12px}
+.ba-choice{
+  padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);color:#fff;font-weight:800;cursor:pointer;
+}
+.ba-choice.good{background:rgba(84,190,125,.18);border-color:rgba(84,190,125,.55)}
+.ba-choice.bad{background:rgba(235,91,91,.16);border-color:rgba(235,91,91,.52)}
+.ba-pair-area{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.ba-side{padding:10px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08)}
+.ba-side-title{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:#cfc9ec;font-weight:900;margin-bottom:8px}
+.ba-pair-shard{
+  margin:5px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer;
+}
+.ba-pair-shard.selected{outline:3px solid rgba(245,215,110,.62);background:rgba(245,215,110,.10)}
+.ba-pair-shard.used{opacity:.28;text-decoration:line-through;cursor:default}
+.ba-groups{margin:14px 0 8px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.ba-group{
+  padding:11px 14px;border-radius:14px;background:rgba(84,190,125,.14);
+  border:1px solid rgba(84,190,125,.46);font-weight:900;color:#edfff4
+}
+.ba-leftovers{
+  max-width:760px;margin:8px auto;padding:10px 12px;border-radius:12px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);font-weight:800
+}
+.ba-final-options{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.ba-final-options button{
+  min-width:118px;padding:11px 15px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(103,200,255,.10);color:#fff;font-weight:900;cursor:pointer
+}
+.ba-status{min-height:24px;margin-top:9px;font-weight:800;color:#f5d76e}
+@media(max-width:680px){.ba-pair-area{grid-template-columns:1fr}.ba-number{min-width:125px;font-size:25px}}
+@media (prefers-reduced-motion: reduce){.ba-shard.fall{animation:none}}
+
+
+.operation-choice-wrap{width:min(100%,760px);margin:8px auto 2px}
+.operation-choice-buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:14px 0 6px}
+.operation-choice-buttons button{min-width:150px;font-size:20px;font-weight:900;padding:13px 18px}
+.operation-choice-buttons .add-choice{background:rgba(84,190,125,.18);border:1px solid rgba(84,190,125,.5)}
+.operation-choice-buttons .sub-choice{background:rgba(103,200,255,.16);border:1px solid rgba(103,200,255,.45)}
+.operation-choice-status{min-height:26px;margin-top:8px;font-weight:900;color:#f5d76e}
+.operation-preview .column-digit{font-size:30px}
+
+</style>
+</head>
+<body>
+<div class="screen" id="startScreen">
+  <div class="hero">
+    <h1>🏰 Hogwarts Arithmetic Quest</h1>
+    <h2>The Vanishing Staircase</h2>
+    <p class="tagline">The castle staircases have scrambled themselves. Restore five arithmetic wards before the final staircase disappears.</p>
+    <p class="mission">This quest practices estimation, the Standard Column Method for addition and subtraction, and choosing the correct operation in word problems.</p>
+    <div class="mini-grid">
+      <div class="feature"><strong>🧭 Estimation Compass</strong>Round first to predict sensible sums and differences.</div>
+      <div class="feature"><strong>➕ Addition Column Charm</strong>Regroup using the Standard Column Method.</div>
+      <div class="feature"><strong>➖ Subtraction Column Charm</strong>Tap to regroup, then subtract column by column.</div>
+      <div class="feature"><strong>📜 Story Spell</strong>Choose + or − from the story, then solve it with the same column tool.</div>
+    </div>
+    <button class="start-btn" onclick="startGame()">Enter the Moving Staircase</button>
+    <button class="ghost-btn" onclick="toggleHistory('home')">📖 Open Quest Ledger</button>
+  </div>
+  <div class="history-card"><div class="history-header" onclick="toggleHistory('home')"><div class="history-title">📖 Quest Ledger</div><div>▼</div></div><div class="history-body" id="homeHistory"><div id="homeHistoryLines" class="history-meta">No quests yet.</div></div></div>
+</div>
+
+<div class="screen hidden" id="gameScreen">
+  <div class="hud">
+    <div class="hud-card"><div class="hud-label">Staircase Ward</div><div class="hud-value"><span id="roundNum">1</span>/5</div></div>
+    <div class="hud-card"><div class="hud-label">House Points</div><div class="hud-value" id="scoreBox">0</div></div>
+    <div class="hud-card"><div class="hud-label">Streak</div><div class="hud-value" id="streakBox">0</div></div>
+    <div class="hud-card"><div class="hud-label">Castle Magic</div><div class="hud-value" id="magicBox">Flickering</div></div>
+  </div>
+  <div class="stair-map" id="stairMap"></div>
+  <div class="castle-meter"><div class="trail"></div><div class="staircase" id="staircase">🪜✨</div><div class="tower">🏰</div></div>
+  <div class="arena">
+    <div class="challenge-chip" id="skillChip">Skill</div>
+    <div class="question" id="questionText">Question</div>
+    <div class="visual" id="visual"></div>
+    <div class="options" id="options"></div>
+    <div class="submit-row"><input id="answerInput" placeholder="Type an answer or choose a spell tile" onkeydown="if(event.key==='Enter')checkAnswer()"><button id="submitAnswerBtn" onclick="checkAnswer()">Cast Spell</button></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+  <div class="hint-card" id="hintCard"><div class="hint-header" onclick="toggleHint()"><div class="hint-title">💡 Strategy Charm — teach me the method</div><div id="hintChevron">▼</div></div><div class="hint-body" id="hintBody"></div></div>
+  <div class="history-card"><div class="history-header" onclick="toggleHistory('game')"><div class="history-title">📖 Quest Ledger</div><div>▼</div></div><div class="history-body" id="gameHistory"><div id="historyLines" class="history-meta">No quests yet.</div></div></div>
+</div>
+
+<div class="screen hidden" id="endScreen">
+  <div class="final-card"><h1>✨ Staircase Restored!</h1><p class="tagline" id="endSummary"></p><p class="mission" id="endMessage"></p><button class="start-btn" id="retryMissedBtn" onclick="startRetryMissed()" style="display:none">↺ Retry Missed Questions</button><button class="start-btn" onclick="startGame()">Play Again</button><button class="ghost-btn" onclick="resetHistory()">Clear Ledger</button></div>
+  <div class="history-card"><div class="history-header" onclick="toggleHistory('end')"><div class="history-title">📖 Quest Ledger</div><div>▼</div></div><div class="history-body active" id="endHistory"><div id="endHistoryLines"></div></div></div>
+</div>
+
+<script>
+let score=0,streak=0,round=0,wrong=0,current=null,locked=false,historyLog=[],matchState=null;
+let subColumnState=null;
+let missedQuestions=[],retryMode=false,retryQueue=[],retryIndex=0,retryAgain=[];
+const totalRounds=5;
+const skillOrder=['estimate','addStandard','subStandard','storyColumn','finalMatch'];
+const roomNames=['Compass','Charms','Potions','Great Hall','Requirement'];
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function shuffle(arr){return arr.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1])}
+function fmt(n){return Number(n).toLocaleString('en-US')}
+function norm(s){return String(s??'').toLowerCase().replace(/,/g,'').replace(/\s+/g,'').replace(/–|—|-/g,'').replace(/[^a-z0-9]/g,'')}
+function roundTo(n,p){return Math.round(n/p)*p}
+function makeOptions(correct,distractors){const out=[];[correct,...distractors].forEach(x=>{x=String(x);if(!out.some(v=>norm(v)===norm(x)))out.push(x)});return shuffle(out.slice(0,4))}
+function choose(arr){return arr[randInt(0,arr.length-1)]}
+function opVisual(a,b,op){return `<div class="algorithm"><div>${fmt(a)}</div><div><span class="op">${op}</span>${fmt(b)}</div><div class="line">?</div></div>`}
+function scroll(t){return `<div class="scroll">${t}</div>`}
+function renderRounding(n,p){const low=Math.floor(n/p)*p,high=low+p,pct=((n-low)/p)*100;return `<div class="rounding-track"><div class="rounding-bar"><div class="rounding-dot" style="left:${pct}%"></div></div><div class="round-labels"><span>${fmt(low)}</span><span>${fmt(high)}</span></div><div class="round-caption">Where does ${fmt(n)} sit between these two friendly numbers?</div></div>`}
+function renderRoundingSlider(n,p,key){const low=Math.floor(n/p)*p,high=low+p;return `<div class="rounding-track interactive-rounding"><div class="round-caption"><strong>${fmt(n)}</strong>: drag the marker to the nearest ${placeName(p)}.</div><div class="round-live" id="roundLive${key}">${fmt(n)}</div><input class="round-slider" id="roundSlider${key}" type="range" min="${low}" max="${high}" step="1" value="${n}" data-number="${n}" data-place="${p}" data-low="${low}" data-high="${high}" oninput="previewRoundingSlide(this,'${key}')" onchange="checkRoundingSlide(this,'${key}')"><div class="round-labels"><span>${fmt(low)}</span><span>${fmt(high)}</span></div><div class="rounding-feedback" id="roundFeedback${key}">Drag and release to check your rounding.</div></div>`}
+function previewRoundingSlide(el,key){const live=document.getElementById(`roundLive${key}`);if(live)live.textContent=fmt(Number(el.value))}
+function checkRoundingSlide(el,key){if(!current||current.kind!=='interactiveEstimate')return;const n=Number(el.dataset.number),p=Number(el.dataset.place),low=Number(el.dataset.low),high=Number(el.dataset.high),mid=(low+high)/2;const snapped=Number(el.value)>=mid?high:low;el.value=snapped;previewRoundingSlide(el,key);const correct=roundTo(n,p),ok=snapped===correct;const fb=document.getElementById(`roundFeedback${key}`);if(fb){fb.className='rounding-feedback '+(ok?'good':'bad');fb.textContent=ok?`✓ Correct! ${fmt(n)} rounds to ${fmt(correct)}.`:`✗ Not quite. ${fmt(n)} is ${n<mid?'below':'above'} the halfway point. Try sliding ${n<mid?'down':'up'}.`}current.roundingChecks=current.roundingChecks||{};current.roundingChecks[key]=ok;const summary=document.getElementById('roundingSummary');if(summary){if(current.roundingChecks.A&&current.roundingChecks.B){summary.innerHTML=`✨ Both rounded correctly. Now estimate: <strong>${fmt(current.roundedA)} ${current.sign} ${fmt(current.roundedB)} = ?</strong>`}else{summary.textContent='Round both numbers correctly, then use the rounded values to estimate.'}}}
+
+function placeName(p){return p===100000?'hundred thousand':p===10000?'ten thousand':p===1000?'thousand':p===100?'hundred':p===10?'ten':'one'}
+
+function additionSteps(a,b){let carry=0,steps=[];const places=[1,10,100,1000,10000,100000];for(const p of places){if(p>Math.max(a,b)&&carry===0)break;const x=Math.floor(a/p)%10,y=Math.floor(b/p)%10,s=x+y+carry;steps.push(`${placeName(p)}s: ${x} + ${y}${carry?` + ${carry} carried`:''} = ${s}. Write ${s%10}${s>=10?' and carry 1':''}.`);carry=Math.floor(s/10)}return steps}
+function subtractionSteps(a,b){let A=String(a).split('').map(Number),B=String(b).padStart(String(a).length,'0').split('').map(Number),steps=[];for(let i=A.length-1;i>=0;i--){let top=A[i],bot=B[i];const p=Math.pow(10,A.length-1-i);if(top<bot){let j=i-1;while(j>=0&&A[j]===0)j--;if(j>=0){A[j]--;for(let k=j+1;k<i;k++)A[k]=9;A[i]+=10;top=A[i];steps.push(`Regroup for the ${placeName(p)}s so ${top} can subtract ${bot}.`)}}steps.push(`${placeName(p)}s: ${top} − ${bot} = ${top-bot}.`)}return steps}
+function hintSteps(lines){return lines.map((x,i)=>`<div class="hint-step"><strong>${i+1}.</strong> ${x}</div>`).join('')}
+
+function startGame(){score=0;streak=0;round=0;wrong=0;locked=false;matchState=null;missedQuestions=[];retryMode=false;retryQueue=[];retryIndex=0;retryAgain=[];historyLog=JSON.parse(localStorage.getItem('unit2StairHistory')||'[]');document.getElementById('startScreen').classList.add('hidden');document.getElementById('endScreen').classList.add('hidden');document.getElementById('gameScreen').classList.remove('hidden');updateHUD();renderHistory();loadQuestion()}
+function updateHUD(){document.getElementById('scoreBox').textContent=score;document.getElementById('streakBox').textContent=streak;document.getElementById('roundNum').textContent=Math.max(1,Math.min(round,totalRounds));document.getElementById('magicBox').textContent=wrong===0?'Bright':wrong<2?'Steady':'Wobbly';const map=document.getElementById('stairMap');map.innerHTML='';for(let i=0;i<totalRounds;i++){const d=document.createElement('div');d.className='step';d.dataset.room=roomNames[i]||'';d.textContent=i<round?'✨':'🔒';if(i<round)d.classList.add('open');map.appendChild(d)}const pct=Math.min(92,(round/totalRounds)*88);document.getElementById('staircase').style.left=`${pct}%`}
+function loadQuestion(){
+  if(retryMode)return loadRetryQuestion();
+  round++;if(round>totalRounds)return endGame();
+  locked=false;
+  document.getElementById('roundNum').textContent=round;
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  const answerInput=document.getElementById('answerInput');
+  const submitBtn=document.getElementById('submitAnswerBtn');
+  answerInput.value='';answerInput.disabled=false;answerInput.style.display='';
+  if(submitBtn)submitBtn.textContent='Cast Spell';
+  document.getElementById('hintBody').classList.remove('active');
+  current=buildQuestion(skillOrder[round-1]);
+  showCurrentQuestion();
+}
+function showCurrentQuestion(){
+  const answerInput=document.getElementById('answerInput');
+  const submitBtn=document.getElementById('submitAnswerBtn');
+  document.getElementById('skillChip').textContent=current.skillLabel;
+  document.getElementById('questionText').textContent=current.question;
+  document.getElementById('visual').innerHTML=current.visual||'';
+  document.getElementById('hintBody').innerHTML=current.hint||'';
+  answerInput.placeholder=current.placeholder||'Type an answer or choose a spell tile';
+  answerInput.value='';answerInput.disabled=false;answerInput.style.display='';
+  if(current.kind==='columnSubtraction'||current.kind==='columnAddition'){
+    answerInput.disabled=true;
+    answerInput.placeholder='Complete the column work first';
+    if(submitBtn)submitBtn.textContent='Submit Answer';
+  }else if(current.kind==='operationStory'){
+    answerInput.disabled=true;
+    answerInput.style.display='none';
+    document.querySelector('.submit-row').style.display='none';
+  }else if(submitBtn)submitBtn.textContent='Cast Spell';
+  renderOptions(current.options||[]);
+  document.querySelector('.submit-row').style.display='flex';
+  if(current.kind==='columnSubtraction')setTimeout(focusSubResult,0);
+}
+function renderOptions(opts){const box=document.getElementById('options');box.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.className='option-btn';b.textContent=o;b.onclick=()=>{document.getElementById('answerInput').value=o;checkAnswer()};box.appendChild(b)})}
+function buildQuestion(s){if(s==='estimate')return qEstimate();if(s==='addStandard')return qAdd();if(s==='subStandard')return qSub();if(s==='storyColumn')return qStoryColumn();return qFinalMatch()}
+
+function qEstimate(){const isAdd=Math.random()<.6,p=Math.random()<.7?1000:10000;let a=randInt(12000,89000),b=randInt(7000,49000);if(!isAdd&&b>a)[a,b]=[b,a];const ar=roundTo(a,p),br=roundTo(b,p),ans=isAdd?ar+br:ar-br;const sign=isAdd?'+':'−';return{kind:'interactiveEstimate',skillLabel:'Estimation Compass',question:`Round each number to the nearest ${placeName(p)}, then estimate the ${isAdd?'sum':'difference'}: ${fmt(a)} ${sign} ${fmt(b)}.`,answer:fmt(ans),roundedA:ar,roundedB:br,sign,roundingChecks:{A:false,B:false},options:makeOptions(fmt(ans),[fmt(ans+p),fmt(Math.max(0,ans-p)),fmt((isAdd?a+b:a-b))]),visual:renderRoundingSlider(a,p,'A')+renderRoundingSlider(b,p,'B')+`<div class="rounding-summary" id="roundingSummary">Optional: drag each marker to practice the rounding before choosing the estimate.</div>`,hint:hintSteps([`Round ${fmt(a)} to ${fmt(ar)}.`,`Round ${fmt(b)} to ${fmt(br)}.`,`Use the rounded numbers: ${fmt(ar)} ${sign} ${fmt(br)} = <strong>${fmt(ans)}</strong>.`,`An estimate is a prediction. The exact answer should be reasonably close.`])}}
+
+function columnAdditionData(a,b){
+  const A=String(a).padStart(6,'0').split('').map(Number), B=String(b).padStart(6,'0').split('').map(Number);
+  const result=Array(6).fill(0), carryInto=Array(6).fill(0);
+  let carry=0;
+  for(let i=5;i>=0;i--){
+    const s=A[i]+B[i]+carry;
+    result[i]=s%10;
+    const next=Math.floor(s/10);
+    if(i>0) carryInto[i-1]=next;
+    carry=next;
+  }
+  return {A,B,result,carryInto};
+}
+function renderColumnAddition(a,b){
+  const d=columnAdditionData(a,b);
+  const labels=['Hundred<br>thousands','Ten<br>thousands','Thousands','Hundreds','Tens','Ones'];
+  const showDigit=(arr,i)=>{const before=arr.slice(0,i).some(x=>x!==0);return arr[i]!==0||before||i===5?arr[i]:''};
+  let h='<div class="column-method"><div class="column-title">✦ Standard Column Method</div><div class="column-grid">';
+  h+='<div></div>'+labels.map(x=>`<div class="column-place">${x}</div>`).join('');
+  h+='<div></div>';
+  for(let i=0;i<6;i++) h+=i===5?'<div></div>':`<input class="column-carry" id="carry${i}" inputmode="numeric" maxlength="1" aria-label="regrouped digit above ${labels[i].replace(/<br>/g,' ')}">`;
+  h+='<div></div>'+d.A.map((_,i)=>`<div class="column-digit">${showDigit(d.A,i)}</div>`).join('');
+  h+='<div class="column-op">+</div>'+d.B.map((_,i)=>`<div class="column-digit">${showDigit(d.B,i)}</div>`).join('');
+  h+='<div></div><div class="column-rule"></div>';
+  h+='<div></div>'+d.result.map((_,i)=>`<input class="column-result" id="result${i}" inputmode="numeric" maxlength="1" aria-label="answer digit for ${labels[i].replace(/<br>/g,' ')}">`).join('');
+  h+='</div><div class="column-help">Add from right to left. When a column makes 10 or more, put the <strong>regrouped digit in the small box above the next column</strong>, just like on paper.</div><button type="button" class="column-check" onclick="checkColumnAddition()">Check Column Work</button><div class="column-status" id="columnStatus"></div></div>';
+  return h;
+}
+function checkColumnAddition(){
+  if(!current||current.kind!=='columnAddition')return;
+  const d=columnAdditionData(current.a,current.b); let ok=true;
+  for(let i=0;i<5;i++){
+    const el=document.getElementById(`carry${i}`); if(!el)continue;
+    const raw=el.value.trim(), got=raw===''?0:Number(raw), expected=d.carryInto[i];
+    const right=got===expected; el.classList.toggle('correct',right);el.classList.toggle('wrong',!right);if(!right)ok=false;
+  }
+  for(let i=0;i<6;i++){
+    const el=document.getElementById(`result${i}`);if(!el)continue;
+    const got=el.value.trim()===''?NaN:Number(el.value), expected=d.result[i];
+    const right=got===expected;el.classList.toggle('correct',right);el.classList.toggle('wrong',!right);if(!right)ok=false;
+  }
+  const status=document.getElementById('columnStatus');
+  if(ok){status.className='column-status good';status.textContent='✓ Perfect regrouping and column work. Your answer is ready — press Submit Answer.';current.columnComplete=true;const ans=document.getElementById('answerInput');ans.value=current.answer;ans.disabled=true;ans.placeholder='Answer ready';const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer';}
+  else{status.className='column-status bad';status.textContent='Not quite yet. Green boxes are correct; check the red boxes and work from the ones column left.';}
+}
+
+
+function subtractionInteractionData(a,b){
+  const A=String(a).padStart(6,'0').split('').map(Number),B=String(b).padStart(6,'0').split('').map(Number),work=A.slice();
+  let borrowCount=0,valid=true;
+  for(let i=5;i>0;i--){
+    if(work[i]<B[i]){
+      if(work[i-1]===0){valid=false;break;}
+      work[i-1]-=1;work[i]+=10;borrowCount++;
+    }
+  }
+  return{valid,borrowCount};
+}
+function initColumnSubtraction(a,b){
+  const A=String(a).padStart(6,'0').split('').map(Number),B=String(b).padStart(6,'0').split('').map(Number);
+  subColumnState={A:A.slice(),B:B.slice(),work:A.slice(),regroupAbove:Array(6).fill(null),changed:Array(6).fill(false),results:Array(6).fill(null),currentIndex:5,complete:false,message:'Start in the ones column.',wrongTap:null};
+}
+function subExpectedDigit(i){return subColumnState.work[i]-subColumnState.B[i]}
+function subNeedsBorrow(i){return subColumnState.work[i]<subColumnState.B[i]}
+function subPlaceLabel(i){return ['hundred thousands','ten thousands','thousands','hundreds','tens','ones'][i]}
+function subColumnInstruction(){
+  const s=subColumnState;if(!s)return'';if(s.complete)return'✓ All columns are complete.';
+  const i=s.currentIndex,top=s.work[i],bot=s.B[i],place=subPlaceLabel(i);
+  if(top<bot)return`Focus on the <strong>${place}</strong>: ${top} is too small to subtract ${bot}. Tap the digit immediately to the left to regroup.`;
+  return`Focus on the <strong>${place}</strong>: solve <strong>${top} − ${bot}</strong>, then enter that digit below.`;
+}
+function renderColumnSubtraction(){
+  const s=subColumnState,labels=['Hundred<br>thousands','Ten<br>thousands','Thousands','Hundreds','Tens','Ones'];if(!s)return'';
+  let h='<div class="column-method"><div class="column-title">✦ Standard Column Method — Subtraction</div><div class="column-grid">';
+  h+='<div></div>'+labels.map(x=>`<div class="column-place">${x}</div>`).join('');
+  h+='<div></div>';
+  for(let i=0;i<6;i++){
+    const main=s.regroupAbove[i]!==null?s.work[i]-10:s.work[i];
+    const regroup=s.regroupAbove[i]!==null?`<span class="sub-regroup">${s.regroupAbove[i]}</span>`:'';
+    const cls=['sub-top-cell',i===s.currentIndex?'focus':'',s.changed[i]?'changed':'',s.wrongTap===i?'wrong-tap':''].filter(Boolean).join(' ');
+    h+=`<button type="button" class="${cls}" id="subTop${i}" onclick="tapSubBorrow(${i})" aria-label="top digit ${main} in ${subPlaceLabel(i)} place">${regroup}<span class="sub-original">${main}</span></button>`;
+  }
+  h+='<div class="column-op">−</div>'+s.B.map(d=>`<div class="column-digit">${d}</div>`).join('');
+  h+='<div></div><div class="column-rule"></div><div></div>';
+  for(let i=0;i<6;i++){
+    const solved=s.results[i]!==null,active=i===s.currentIndex&&!s.complete;
+    h+=`<input class="column-result sub-result ${active?'active':''} ${solved?'correct':''}" id="subResult${i}" inputmode="numeric" maxlength="1" ${active?'':'disabled'} value="${solved?s.results[i]:''}" oninput="autoCheckSubColumn(this)" aria-label="answer digit for ${subPlaceLabel(i)} place">`;
+  }
+  h+=`</div><div class="sub-current-note">${subColumnInstruction()}</div>`;
+  h+='<div class="column-help">Work from right to left. If the top digit is too small, <strong>tap the digit immediately to its left</strong>. That digit shrinks by 1, and the renamed value appears <span class="borrow-key">in red above the column you are solving</span>. Enter each answer digit and the game will move you on automatically when it is correct.</div><div class="column-status" id="columnStatus">'+(s.message||'')+'</div></div>';
+  return h;
+}
+function refreshSubColumn(){const v=document.getElementById('visual');if(v)v.innerHTML=renderColumnSubtraction();setTimeout(focusSubResult,0)}
+function focusSubResult(){if(!subColumnState||subColumnState.complete)return;const el=document.getElementById(`subResult${subColumnState.currentIndex}`);if(el&&!el.disabled)el.focus()}
+function tapSubBorrow(i){
+  if(!current||current.kind!=='columnSubtraction'||!subColumnState||subColumnState.complete)return;
+  const s=subColumnState,c=s.currentIndex;
+  if(!subNeedsBorrow(c)){
+    s.message=`No regrouping is needed in the ${subPlaceLabel(c)} column. Solve ${s.work[c]} − ${s.B[c]}.`;s.wrongTap=i;refreshSubColumn();setTimeout(()=>{if(subColumnState){subColumnState.wrongTap=null;refreshSubColumn()}},500);return;
+  }
+  const donor=c-1;
+  if(i!==donor){s.message='That is not the place to regroup from. Tap the top digit immediately to the left of the highlighted column.';s.wrongTap=i;refreshSubColumn();setTimeout(()=>{if(subColumnState){subColumnState.wrongTap=null;refreshSubColumn()}},500);return;}
+  if(s.work[donor]<=0){s.message='This problem needs regrouping across a zero. Use the Strategy Charm for this one.';refreshSubColumn();return;}
+  s.work[donor]-=1;s.changed[donor]=true;s.work[c]+=10;s.regroupAbove[c]=s.work[c];
+  s.message=`✓ Correct regrouping: the ${subPlaceLabel(donor)} digit shrank by 1, and ${s.work[c]} now appears in red above the ${subPlaceLabel(c)} column.`;
+  refreshSubColumn();
+}
+function autoCheckSubColumn(el){
+  if(!current||current.kind!=='columnSubtraction'||!subColumnState||subColumnState.complete)return;
+  const s=subColumnState,i=s.currentIndex;
+  if(!el||el.id!==`subResult${i}`)return;
+  const raw=el.value.trim();
+  if(raw==='')return;
+  if(subNeedsBorrow(i)){
+    s.message='Regroup first: tap the top digit immediately to the left of the highlighted column.';
+    el.value='';refreshSubColumn();return;
+  }
+  const expected=subExpectedDigit(i);
+  if(Number(raw)!==expected){
+    s.message=`Not quite. Recheck ${s.work[i]} − ${s.B[i]} in the ${subPlaceLabel(i)} column.`;
+    el.classList.add('wrong');
+    setTimeout(()=>{if(subColumnState&&!subColumnState.complete&&subColumnState.currentIndex===i){const again=document.getElementById(`subResult${i}`);if(again){again.value='';again.classList.remove('wrong');again.focus()}}},500);
+    const status=document.getElementById('columnStatus');if(status){status.className='column-status bad';status.textContent=s.message}
+    return;
+  }
+  s.results[i]=expected;s.message=`✓ ${s.work[i]} − ${s.B[i]} = ${expected}. Move one column left.`;s.currentIndex--;
+  if(s.currentIndex<0){
+    s.complete=true;current.columnComplete=true;
+    s.message='✓ Perfect regrouping and subtraction. Your answer is ready — press Submit Answer.';
+    const ans=document.getElementById('answerInput');ans.value=current.answer;ans.disabled=true;ans.placeholder='Answer ready';
+    const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer';
+  }
+  refreshSubColumn();
+}
+function checkSubColumn(){
+  if(!current||current.kind!=='columnSubtraction'||!subColumnState)return;
+  const s=subColumnState;if(s.complete)return;const i=s.currentIndex;
+  if(subNeedsBorrow(i)){s.message='Regroup first: tap the top digit immediately to the left of the highlighted column.';refreshSubColumn();return;}
+  const el=document.getElementById(`subResult${i}`),raw=el?el.value.trim():'',expected=subExpectedDigit(i);
+  if(raw===''||Number(raw)!==expected){s.message=`Not quite. Recheck ${s.work[i]} − ${s.B[i]} in the ${subPlaceLabel(i)} column.`;refreshSubColumn();const again=document.getElementById(`subResult${i}`);if(again){again.classList.add('wrong');again.focus()}return;}
+  s.results[i]=expected;s.message=`✓ ${s.work[i]} − ${s.B[i]} = ${expected}. Move one column left.`;s.currentIndex--;
+  if(s.currentIndex<0){s.complete=true;current.columnComplete=true;s.message='✓ Perfect regrouping and subtraction. Your answer is ready — press Submit Answer.';const ans=document.getElementById('answerInput');ans.disabled=true;ans.value=current.answer;ans.placeholder='Answer ready';const btn=document.getElementById('submitAnswerBtn');if(btn)btn.textContent='Submit Answer'}
+  refreshSubColumn();
+}
+
+function qAdd(){let a,b,sum,steps;do{a=randInt(12000,489999);b=randInt(11000,389999);sum=a+b;steps=additionSteps(a,b)}while(sum>999999||!steps.some(s=>s.includes('carry 1')));return{kind:'columnAddition',a,b,columnComplete:false,skillLabel:'Standard Column Method — Addition',question:`Use the standard column method to add ${fmt(a)} + ${fmt(b)}. Place any regrouped digits in the small boxes above the columns.`,answer:fmt(sum),options:[],visual:renderColumnAddition(a,b),hint:`<div class="strategy-box"><strong>Column Charm:</strong> line up ones under ones, tens under tens, and so on. Add from right to left. When a column totals 10 or more, write the ones digit below and place the regrouped digit above the next column.</div>${hintSteps(steps)}<div class="hint-step"><strong>Answer:</strong> ${fmt(sum)}</div>`}}
+
+function qSub(){let a,b,steps,check;do{a=randInt(120000,899999);b=randInt(11000,a-10000);steps=subtractionSteps(a,b);check=subtractionInteractionData(a,b)}while(a-b<10000||!check.valid||check.borrowCount<1||check.borrowCount>3);const ans=a-b;initColumnSubtraction(a,b);return{kind:'columnSubtraction',a,b,columnComplete:false,skillLabel:'Standard Column Method — Subtraction',question:`Use the standard column method to subtract ${fmt(a)} − ${fmt(b)}. Work from right to left and tap the top digit you need to regroup from.`,answer:fmt(ans),options:[],visual:renderColumnSubtraction(),hint:`<div class="strategy-box"><strong>Column Charm:</strong> align place values and work from right to left. If the top digit is too small, tap the digit immediately to its left. That digit decreases by 1 and the renamed value appears in red above the column you are solving.</div>${hintSteps(steps)}<div class="hint-step"><strong>Answer:</strong> ${fmt(ans)}</div>`}}
+
+
+let breakState=null;
+
+function makeBreakApartProblem(){
+  const thA=randInt(1,4), thB=randInt(1,4);
+  const hA=randInt(1,9), hB=10-hA;
+  const tA=randInt(1,9), tB=randInt(1,9);
+  const oA=randInt(1,9), oB=randInt(1,9);
+  const a=thA*1000+hA*100+tA*10+oA;
+  const b=thB*1000+hB*100+tB*10+oB;
+  return{
+    a,b,
+    aParts:[thA*1000,hA*100,tA*10,oA],
+    bParts:[thB*1000,hB*100,tB*10,oB],
+    answer:a+b
+  };
+}
+
+function initBreakApart(){
+  const p=makeBreakApartProblem();
+  breakState={
+    ...p,
+    demoBroken:false,
+    activeDigit:null,
+    userParts:Array(4).fill(null),
+    selectedA:null,
+    selectedB:null,
+    usedA:new Set(),
+    usedB:new Set(),
+    groups:[],
+    stage:'demo',
+    message:`Tap ${fmt(p.b)} to shatter it into place-value pieces.`
+  };
+}
+
+function shardHTML(value,delay=0){
+  return `<div class="ba-shard fall" style="animation-delay:${delay}ms">${fmt(value)}</div>`;
+}
+
+function renderBreakApart(){
+  const s=breakState;
+  if(!s)return'';
+  const demoShards=s.demoBroken
+    ? s.bParts.map((v,i)=>shardHTML(v,i*85)).join('')
+    : '';
+
+  const userDigits=String(s.a).split('').map((d,i)=>
+    `<button type="button" class="ba-digit ${s.userParts[i]!==null?'done':''}" data-i="${i}">${d}</button>`
+  ).join('');
+
+  let choiceHTML='';
+  if(s.activeDigit!==null){
+    const i=s.activeDigit;
+    const digit=Number(String(s.a)[i]);
+    const correct=s.aParts[i];
+    const candidates=shuffle([digit,digit*10,digit*100,digit*1000].filter((v,idx,arr)=>arr.indexOf(v)===idx));
+    choiceHTML=candidates.map(v=>`<button type="button" class="ba-choice" data-value="${v}">${fmt(v)}</button>`).join('');
+  }
+
+  const distilled=s.userParts.map((v,i)=>v===null?'':shardHTML(v,i*70)).join('');
+  const ready=s.userParts.every(v=>v!==null);
+
+  let pairHTML='';
+  if(ready){
+    const aBtns=s.aParts.map((v,i)=>`<button type="button" class="ba-pair-shard ${s.selectedA===i?'selected':''} ${s.usedA.has(i)?'used':''}" data-side="A" data-i="${i}">${fmt(v)}</button>`).join('');
+    const bBtns=s.bParts.map((v,i)=>`<button type="button" class="ba-pair-shard ${s.selectedB===i?'selected':''} ${s.usedB.has(i)?'used':''}" data-side="B" data-i="${i}">${fmt(v)}</button>`).join('');
+    const groups=s.groups.map(g=>`<div class="ba-group">${fmt(g.a)} + ${fmt(g.b)} = ${fmt(g.sum)}</div>`).join('');
+    const leftoversA=s.aParts.filter((_,i)=>!s.usedA.has(i));
+    const leftoversB=s.bParts.filter((_,i)=>!s.usedB.has(i));
+    const leftovers=[...leftoversA,...leftoversB];
+
+    let final='';
+    if(s.groups.length>=2){
+      const ans=s.answer;
+      const opts=shuffle([ans,ans+100,Math.max(0,ans-100),ans+1000]);
+      final=`<div class="ba-leftovers"><strong>Friendly groups:</strong> ${s.groups.map(g=>fmt(g.sum)).join(' + ')}<br><strong>Leftovers:</strong> ${leftovers.map(fmt).join(' + ')}</div>
+      <div class="ba-final-options">${opts.map(v=>`<button type="button" data-final="${v}">${fmt(v)}</button>`).join('')}</div>`;
+    }
+
+    pairHTML=`<div class="ba-instruction">Now find two especially friendly pairs. Tap one shard from each side. Good pairs make a clean thousand or hundred.</div>
+    <div class="ba-pair-area">
+      <div class="ba-side"><div class="ba-side-title">${fmt(s.a)} pieces</div>${aBtns}</div>
+      <div class="ba-side"><div class="ba-side-title">${fmt(s.b)} pieces</div>${bBtns}</div>
+    </div>
+    <div class="ba-groups">${groups}</div>${final}`;
+  }
+
+  return `<div class="breakapart-lab">
+    <div class="ba-equation">
+      <button type="button" class="ba-number user" id="baUserNumber" ${s.demoBroken?'':'disabled'}>${fmt(s.a)}</button>
+      <div class="ba-plus">+</div>
+      <button type="button" class="ba-number demo" id="baDemoNumber" ${s.demoBroken?'disabled':''}>${fmt(s.b)}</button>
+    </div>
+    <div class="ba-instruction">${s.stage==='demo'
+      ? `First, watch how one number breaks apart. Tap <strong>${fmt(s.b)}</strong>.`
+      : s.stage==='distill'
+        ? `Now distill <strong>${fmt(s.a)}</strong> yourself. Tap a digit, then choose what that digit is worth.`
+        : `Both numbers are broken apart. Use the pieces to build easy sums.`}</div>
+    <div class="ba-shards">${demoShards}</div>
+    ${s.demoBroken?`<div class="ba-digits">${userDigits}</div><div class="ba-choices">${choiceHTML}</div><div class="ba-shards">${distilled}</div>`:''}
+    ${pairHTML}
+    <div class="ba-status" id="baStatus">${s.message||''}</div>
+  </div>`;
+}
+
+function refreshBreakApart(){
+  const visual=document.getElementById('visual');
+  if(!visual)return;
+  visual.innerHTML=renderBreakApart();
+  wireBreakApart();
+}
+
+function wireBreakApart(){
+  const demo=document.getElementById('baDemoNumber');
+  if(demo)demo.addEventListener('click',()=>{
+    if(!breakState||breakState.demoBroken)return;
+    breakState.demoBroken=true;
+    breakState.stage='distill';
+    breakState.message=`Great. ${fmt(breakState.b)} became ${breakState.bParts.map(fmt).join(' + ')}. Now break apart ${fmt(breakState.a)}.`;
+    refreshBreakApart();
+  });
+
+  document.querySelectorAll('.ba-digit').forEach(btn=>btn.addEventListener('click',()=>{
+    if(!breakState)return;
+    const i=Number(btn.dataset.i);
+    if(breakState.userParts[i]!==null)return;
+    breakState.activeDigit=i;
+    const digit=String(breakState.a)[i];
+    breakState.message=`What is the value of the ${digit} in ${fmt(breakState.a)}?`;
+    refreshBreakApart();
+  }));
+
+  document.querySelectorAll('.ba-choice').forEach(btn=>btn.addEventListener('click',()=>{
+    if(!breakState||breakState.activeDigit===null)return;
+    const i=breakState.activeDigit;
+    const picked=Number(btn.dataset.value);
+    const correct=breakState.aParts[i];
+    if(picked===correct){
+      breakState.userParts[i]=correct;
+      breakState.activeDigit=null;
+      if(breakState.userParts.every(v=>v!==null)){
+        breakState.stage='pair';
+        breakState.message='Excellent. Now tap one shard from each side to make a friendly pair.';
+      }else{
+        breakState.message='Correct. Tap another digit to distill it.';
+      }
+      refreshBreakApart();
+    }else{
+      breakState.message=`Not quite. Think about the digit's place in ${fmt(breakState.a)}.`;
+      const status=document.getElementById('baStatus');
+      if(status)status.textContent=breakState.message;
+      btn.classList.add('bad');
+      setTimeout(()=>btn.classList.remove('bad'),600);
+    }
+  }));
+
+  document.querySelectorAll('.ba-pair-shard').forEach(btn=>btn.addEventListener('click',()=>{
+    if(!breakState)return;
+    const side=btn.dataset.side;
+    const i=Number(btn.dataset.i);
+    if((side==='A'&&breakState.usedA.has(i))||(side==='B'&&breakState.usedB.has(i)))return;
+    if(side==='A')breakState.selectedA=breakState.selectedA===i?null:i;
+    else breakState.selectedB=breakState.selectedB===i?null:i;
+
+    if(breakState.selectedA!==null&&breakState.selectedB!==null){
+      const ai=breakState.selectedA,bi=breakState.selectedB;
+      const av=breakState.aParts[ai],bv=breakState.bParts[bi],sum=av+bv;
+      const intended=(ai===0&&bi===0)||(ai===1&&bi===1);
+      if(intended){
+        breakState.usedA.add(ai);breakState.usedB.add(bi);
+        breakState.groups.push({a:av,b:bv,sum});
+        breakState.selectedA=null;breakState.selectedB=null;
+        breakState.message=breakState.groups.length>=2
+          ? 'Nice! Those big friendly groups are built. Use the leftovers to finish the sum.'
+          : `Yes — ${fmt(av)} + ${fmt(bv)} = ${fmt(sum)} is easy to hold in your head. Find another friendly pair.`;
+      }else{
+        breakState.selectedA=null;breakState.selectedB=null;
+        breakState.message='Try a different pair. Look for matching place-value pieces that make a very easy total.';
+      }
+    }
+    refreshBreakApart();
+  }));
+
+  document.querySelectorAll('[data-final]').forEach(btn=>btn.addEventListener('click',()=>{
+    if(!breakState||!current)return;
+    const v=Number(btn.dataset.final);
+    if(v===breakState.answer){
+      current.answer=fmt(v);
+      current.acceptableAnswers=[fmt(v),String(v)];
+      breakState.message=`✨ Correct. ${fmt(breakState.a)} + ${fmt(breakState.b)} = ${fmt(v)}. Press Submit Answer.`;
+      const input=document.getElementById('answerInput');
+      if(input){input.value=fmt(v);input.disabled=true;}
+      const submit=document.getElementById('submitAnswerBtn');
+      if(submit)submit.textContent='Submit Answer';
+      refreshBreakApart();
+    }else{
+      breakState.message='Close, but not yet. Add the friendly groups and then the leftover tens and ones.';
+      refreshBreakApart();
+    }
+  }));
+}
+
+function qFriendly(){
+  initBreakApart();
+  return{
+    kind:'breakApart',
+    skillLabel:'Break-Apart Crystal',
+    question:'Break the addends apart by place value, then group friendly pieces to make the sum easier.',
+    answer:fmt(breakState.answer),
+    acceptableAnswers:[fmt(breakState.answer),String(breakState.answer)],
+    options:[],
+    visual:renderBreakApart(),
+    placeholder:'Complete the break-apart activity',
+    hint:hintSteps([
+      `Break each number into thousands, hundreds, tens, and ones.`,
+      `Look for place-value pieces that make especially friendly totals, such as 2,000 + 2,000 or 400 + 600.`,
+      `Then combine the friendly groups with the remaining tens and ones.`
+    ])
+  };
+}
+
+
+function renderOperationPreview(a,b){
+  const labels=['Hundred<br>thousands','Ten<br>thousands','Thousands','Hundreds','Tens','Ones'];
+  const A=String(a).padStart(6,'0').split('');
+  const B=String(b).padStart(6,'0').split('');
+  const show=(arr,i)=>arr.slice(0,i+1).some(x=>x!=='0')||i===5?arr[i]:'';
+  let h='<div class="operation-choice-wrap"><div class="column-method operation-preview"><div class="column-title">✦ Which operation belongs in the column?</div><div class="column-grid">';
+  h+='<div></div>'+labels.map(x=>`<div class="column-place">${x}</div>`).join('');
+  h+='<div></div>'+A.map((_,i)=>`<div class="column-digit">${show(A,i)}</div>`).join('');
+  h+='<div class="column-op">?</div>'+B.map((_,i)=>`<div class="column-digit">${show(B,i)}</div>`).join('');
+  h+='<div></div><div class="column-rule"></div></div>';
+  h+=`<div class="operation-choice-buttons"><button type="button" class="add-choice" onclick="chooseStoryOperation('+')">+ Add</button><button type="button" class="sub-choice" onclick="chooseStoryOperation('-')">− Subtract</button></div>`;
+  h+='<div class="operation-choice-status" id="operationChoiceStatus">Read the story, then choose the operation.</div></div></div>';
+  return h;
+}
+
+function qStoryColumn(){
+  const add=Math.random()<0.5;
+  let a,b,ans,story,steps,check;
+  if(add){
+    do{
+      a=randInt(12000,79000);
+      b=randInt(8000,49000);
+      ans=a+b;
+      steps=additionSteps(a,b);
+    }while(ans>150000||!steps.some(s=>s.includes('carry 1')));
+    story=choose([
+      `The Hogwarts library had ${fmt(a)} spell pages catalogued. Madam Pince catalogued ${fmt(b)} more. How many spell pages are catalogued now?`,
+      `The Owlery delivered ${fmt(a)} letters in the morning and ${fmt(b)} more in the afternoon. How many letters were delivered altogether?`,
+      `Gryffindor had ${fmt(a)} House points recorded across several events and earned ${fmt(b)} more. What is the new total?`
+    ]);
+  }else{
+    do{
+      a=randInt(45000,120000);
+      b=randInt(12000,a-10000);
+      ans=a-b;
+      steps=subtractionSteps(a,b);
+      check=subtractionInteractionData(a,b);
+    }while(ans<10000||!check.valid||check.borrowCount<1||check.borrowCount>3);
+    story=choose([
+      `Madam Pince had ${fmt(a)} parchment pages to scan. She finished ${fmt(b)} of them. How many pages are left to scan?`,
+      `The castle storeroom held ${fmt(a)} sheets of parchment. Students used ${fmt(b)} sheets. How many sheets remain?`,
+      `The Hogwarts mailroom received ${fmt(a)} letters and delivered ${fmt(b)}. How many letters still need delivery?`
+    ]);
+  }
+  return{
+    kind:'operationStory',
+    a,b,correctOp:add?'+':'−',
+    answer:fmt(ans),
+    columnComplete:false,
+    skillLabel:'Story Spell — Choose & Solve',
+    question:story,
+    options:[],
+    visual:renderOperationPreview(a,b),
+    hint:`<div class="strategy-box"><strong>Plan first:</strong> decide whether the story is combining amounts or finding what remains.</div><div class="hint-step">Then use the same Standard Column Method you practiced in the last two wards.</div>`
+  };
+}
+
+function chooseStoryOperation(op){
+  if(!current||current.kind!=='operationStory')return;
+  const status=document.getElementById('operationChoiceStatus');
+  if(op!==current.correctOp){
+    if(status){status.style.color='#ffaaaa';status.textContent=op==='+'?'That would combine the amounts. Read the story again: does it ask for a total or what remains?':'That would find a difference. Read the story again: does it ask for a total or what remains?';}
+    return;
+  }
+
+  const a=current.a,b=current.b,answer=current.answer,question=current.question,hint=current.hint;
+  const submitRow=document.querySelector('.submit-row');
+  const answerInput=document.getElementById('answerInput');
+  const submitBtn=document.getElementById('submitAnswerBtn');
+
+  if(op==='+'){
+    current={...current,kind:'columnAddition',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Addition'};
+    document.getElementById('visual').innerHTML=renderColumnAddition(a,b);
+  }else{
+    initColumnSubtraction(a,b);
+    current={...current,kind:'columnSubtraction',columnComplete:false,answer,question,hint,skillLabel:'Story Spell — Subtraction'};
+    document.getElementById('visual').innerHTML=renderColumnSubtraction();
+    setTimeout(focusSubResult,0);
+  }
+
+  document.getElementById('skillChip').textContent=current.skillLabel;
+  if(answerInput){answerInput.value='';answerInput.disabled=true;answerInput.style.display='';answerInput.placeholder='Complete the column work first';}
+  if(submitBtn)submitBtn.textContent='Submit Answer';
+  if(submitRow)submitRow.style.display='flex';
+  renderOptions([]);
+}
+
+function qWordOne(){const add=Math.random()<.5;let text,ans,a,b;if(add){a=randInt(12000,75000);b=randInt(8000,45000);ans=a+b;text=choose([`The Hogwarts library catalogued ${fmt(a)} spell pages in one wing and ${fmt(b)} in another. How many pages were catalogued altogether?`,`The Owlery sent ${fmt(a)} letters before lunch and ${fmt(b)} after lunch. How many letters were sent in all?`,`Gryffindor earned ${fmt(a)} points in a long tournament and then ${fmt(b)} more. What was the total?`])}else{a=randInt(60000,180000);b=randInt(12000,a-10000);ans=a-b;text=choose([`Madam Pince had ${fmt(a)} pages to scan. She finished ${fmt(b)}. How many pages remain?`,`The castle storeroom held ${fmt(a)} parchment sheets and used ${fmt(b)}. How many are left?`,`The Hogwarts mailroom received ${fmt(a)} letters and delivered ${fmt(b)}. How many still need delivery?`])}return{skillLabel:'Story Spell — One Step',question:text,answer:fmt(ans),options:makeOptions(fmt(ans),[fmt(ans+1000),fmt(Math.max(0,ans-1000)),fmt(add?Math.abs(a-b):a+b)]),visual:scroll(add?'What is the total?':'What remains?'),hint:hintSteps([`Underline what you know: ${fmt(a)} and ${fmt(b)}.`,`The story asks for ${add?'a combined total, so add':'what remains, so subtract'}.`,`Expression: ${fmt(a)} ${add?'+':'−'} ${fmt(b)} = <strong>${fmt(ans)}</strong>.`,`Look back: does that answer fit the story?`])}}
+
+function qWordMulti(){const start=randInt(45000,120000),add=randInt(12000,45000),remove=randInt(5000,Math.min(30000,start+add-10000)),ans=start+add-remove;const text=choose([`The Great Hall had ${fmt(start)} enchanted candles in storage. Professor Flitwick added ${fmt(add)} new candles, then ${fmt(remove)} were sent to classrooms. How many candles remain in storage?`,`The Hogwarts library began with ${fmt(start)} books. It received ${fmt(add)} new books, then students checked out ${fmt(remove)}. How many books are still in the library?`,`The Owlery had ${fmt(start)} letters. Another ${fmt(add)} arrived, and then ${fmt(remove)} were delivered. How many letters are still waiting?`]);return{skillLabel:'Multistep Story Spell',question:text,answer:fmt(ans),options:makeOptions(fmt(ans),[fmt(start+add),fmt(start-remove),fmt(ans+1000)]),visual:scroll('Understand → Plan → Carry out → Look back'),hint:hintSteps([`First combine the starting amount and what arrived: ${fmt(start)} + ${fmt(add)} = ${fmt(start+add)}.`,`Then subtract what left: ${fmt(start+add)} − ${fmt(remove)} = <strong>${fmt(ans)}</strong>.`,`Two-step expression: (${fmt(start)} + ${fmt(add)}) − ${fmt(remove)}.`,`Look back: the answer describes how many are still there.`])}}
+
+function qFourOps(){const groups=randInt(18,36),each=randInt(12,28),extra=randInt(40,180),lost=randInt(15,70),ans=groups*each+extra-lost;const text=choose([`Professor Sprout has ${groups} greenhouse trays with ${each} seedlings in each tray. She receives ${extra} more seedlings, but ${lost} are moved to another greenhouse. How many seedlings does she have now?`,`The Quidditch supply room has ${groups} racks with ${each} practice balls on each rack. Madam Hooch adds ${extra} more balls, then sends ${lost} to another field. How many practice balls remain?`,`Honeydukes sends ${groups} crates with ${each} sweets in each crate to Hogwarts. The kitchen adds ${extra} treats, and students eat ${lost}. How many treats remain?`]);return{skillLabel:'Four-Operation Planning',question:text,answer:fmt(ans),options:makeOptions(fmt(ans),[fmt(groups*each),fmt(groups+each+extra-lost),fmt(ans+each)]),visual:scroll(`${groups} groups of ${each} → then + ${extra} → then − ${lost}`),hint:hintSteps([`“${groups} groups of ${each}” means multiply: ${groups} × ${each} = ${fmt(groups*each)}.`,`Add the extra ${extra}: ${fmt(groups*each)} + ${extra} = ${fmt(groups*each+extra)}.`,`Subtract the ${lost} moved away: ${fmt(groups*each+extra)} − ${lost} = <strong>${fmt(ans)}</strong>.`,`Plan the operations before calculating so the story stays organized.`])}}
+
+function qRemainder(){const mode=randInt(1,3),groups=randInt(18,48),q=randInt(5,12),r=randInt(1,groups-1),total=groups*q+r;let question,ans,explain;if(mode===1){question=`${fmt(total)} students are going to Hogsmeade. Each carriage holds ${groups} students. How many carriages are needed so EVERY student has a seat?`;ans=q+1;explain=`${fmt(total)} ÷ ${groups} = ${q} remainder ${r}. ${q} carriages are not enough because ${r} students still need seats, so round up to ${q+1}.`}else if(mode===2){question=`Fred has ${fmt(total)} joke items and packs ${groups} items in each FULL display box. How many full boxes can he make?`;ans=q;explain=`${fmt(total)} ÷ ${groups} = ${q} remainder ${r}. Only ${q} complete boxes can be filled; the remainder does not make another full box.`}else{question=`Professor Snape divides ${fmt(total)} potion ingredients into groups of ${groups}. After making as many full groups as possible, how many ingredients are left over?`;ans=r;explain=`${fmt(total)} ÷ ${groups} = ${q} remainder ${r}. The remainder ${r} is exactly what is left over.`}return{skillLabel:'Interpret the Remainder',question,answer:String(ans),options:makeOptions(String(ans),[String(q),String(q+1),String(r)]),visual:scroll(`${fmt(total)} ÷ ${groups} = ${q} R ${r}`),hint:hintSteps([`First divide: ${fmt(total)} ÷ ${groups} = ${q} remainder ${r}.`,explain,`The story tells you what the remainder means. Do not automatically ignore it or automatically round up.`])}}
+
+function qReasonableness(){const p=choose([1000,10000]);const add=Math.random()<.5;let a=randInt(18000,130000),b=randInt(9000,80000);if(!add&&b>a)[a,b]=[b,a];const exact=add?a+b:a-b,est=(add?roundTo(a,p)+roundTo(b,p):roundTo(a,p)-roundTo(b,p));const candidates=[exact,exact+choose([5000,10000,20000]),Math.max(0,exact-choose([4000,9000,15000])),add?Math.abs(a-b):a+b];const correct=fmt(exact);return{skillLabel:'Reasonableness Ward',question:`Without doing every step first, use estimation to choose the most reasonable exact answer for ${fmt(a)} ${add?'+':'−'} ${fmt(b)}.`,answer:correct,options:makeOptions(correct,candidates.filter(x=>x!==exact).map(fmt)),visual:scroll(`Estimate first: round to the nearest ${placeName(p)}`),hint:hintSteps([`Round ${fmt(a)} → ${fmt(roundTo(a,p))}.`,`Round ${fmt(b)} → ${fmt(roundTo(b,p))}.`,`Estimated ${add?'sum':'difference'}: about <strong>${fmt(est)}</strong>.`,`Choose the exact-looking answer that is close to that estimate. The true result is ${fmt(exact)}.`])}}
+
+function renderMatch(){
+  if(!matchState)return'';
+  if(matchState.mode==='friendly')return renderFriendlyMatch();
+  const left=matchState.pairs.map((p,i)=>`<button class="match-card left ${matchState.selectedLeft===i?'selected':''} ${matchState.matched[i]?'matched':''}" onclick="selectMatchLeft(${i})">${p.prompt}</button>`).join('');
+  const right=matchState.right.map((n,i)=>{const used=Object.values(matchState.matched).includes(i);const leftover=matchState.completed&&i===matchState.leftoverIndex;return `<button class="match-card right ${used?'matched':''} ${leftover?'leftover':''}" onclick="selectMatchRight(${i})">${n}</button>`}).join('');
+  return `<div class="match-board"><div class="match-column"><div class="match-heading">Estimation scrolls</div>${left}</div><div class="match-column"><div class="match-heading">Results</div>${right}</div></div><div class="match-status">${matchState.message}</div>`;
+}
+function refreshMatch(){
+  document.getElementById('visual').innerHTML=renderMatch();
+  if(!matchState)return;
+  const input=document.getElementById('answerInput');
+  const submitBtn=document.getElementById('submitAnswerBtn');
+  if(matchState.completed&&matchState.mode==='friendly'){
+    if(input){input.value='';input.disabled=true;input.style.display='none';}
+    if(submitBtn)submitBtn.textContent='Submit Matches';
+  }else if(matchState.completed){
+    if(input)input.placeholder='Type the unmatched result';
+  }
+}
+function selectMatchLeft(i){
+  if(!matchState||matchState.completed||matchState.matched[i]!==undefined)return;
+  matchState.selectedLeft=i;
+  matchState.message=matchState.mode==='friendly'
+    ? 'Now choose the missing addend that keeps this sum unchanged.'
+    : 'Good. Now choose the result that matches this scroll.';
+  refreshMatch();
+}
+function selectMatchRight(j){
+  if(!matchState||matchState.completed||matchState.selectedLeft===null)return;
+  const i=matchState.selectedLeft,p=matchState.pairs[i];
+  if(norm(matchState.right[j])===norm(p.answer)){
+    matchState.matched[i]=j;
+    matchState.selectedLeft=null;
+    const used=new Set(Object.values(matchState.matched));
+    if(Object.keys(matchState.matched).length===matchState.pairs.length){
+      matchState.completed=true;
+      if(matchState.mode==='friendly'){
+        matchState.message='✨ All three equivalent sums are matched correctly. Press Submit Matches to continue.';
+      }else{
+        matchState.leftoverIndex=matchState.right.findIndex((_,idx)=>!used.has(idx));
+        matchState.message=`All six matches are correct. One result has no scroll. Type that unmatched result to restore the final staircase.`;
+      }
+    }else{
+      matchState.message=matchState.mode==='friendly'
+        ? '✓ Correct. Choose another equation.'
+        : 'Correct match. Keep going.';
+    }
+  }else{
+    matchState.message=matchState.mode==='friendly'
+      ? 'Not quite. If the given addend went up, the missing addend must go down by exactly the same amount.'
+      : 'Not that one. Round both numbers first, then add or subtract the rounded values.';
+  }
+  refreshMatch();
+}
+
+function qFinalMatch(){const pairs=[
+ {prompt:'Estimate 47,680 + 31,420 to the nearest ten thousand',answer:'80,000'},
+ {prompt:'Estimate 62,450 − 18,320 to the nearest thousand',answer:'44,000'},
+ {prompt:'Estimate 23,760 + 15,240 to the nearest thousand',answer:'39,000'},
+ {prompt:'Estimate 91,300 − 46,700 to the nearest ten thousand',answer:'40,000'},
+ {prompt:'Estimate 68,430 + 20,880 to the nearest thousand',answer:'89,000'},
+ {prompt:'Estimate 74,550 − 32,180 to the nearest thousand',answer:'43,000'}
+];const leftover='51,000';const right=shuffle([...pairs.map(p=>p.answer),leftover]);matchState={pairs:shuffle(pairs),right,leftover,selectedLeft:null,matched:{},completed:false,leftoverIndex:-1,message:'Click one estimation scroll on the left, then click its matching result on the right.'};return{kind:'matchQuest',skillLabel:'Room of Requirement — Estimation Match',question:'Match each addition or subtraction estimation scroll to its result. One result will be left unmatched. Type the leftover result to finish the quest.',answer:leftover,acceptableAnswers:[leftover,leftover.replace(',','')],options:[],visual:renderMatch(),placeholder:'Finish the matches first',hint:hintSteps([`Round each number to the place named on the scroll.`,`Then add or subtract the rounded numbers — not the original numbers.`,`Match all six estimation scrolls. The single unused result is the final answer.`])}}
+
+function makeRetrySnapshot(q){
+  if(!q)return null;
+  if(q.kind==='matchQuest')return{kind:'matchQuestReplay'};
+  const snap=JSON.parse(JSON.stringify(q));
+  if(snap.kind==='columnAddition'||snap.kind==='columnSubtraction')snap.columnComplete=false;
+  if(snap.kind==='interactiveEstimate')snap.roundingChecks={A:false,B:false};
+  return snap;
+}
+function prepareRetryQuestion(snap){
+  if(!snap)return null;
+  if(snap.kind==='matchQuestReplay')return qFinalMatch();
+  const q=JSON.parse(JSON.stringify(snap));
+  if(q.kind==='columnAddition'){
+    q.columnComplete=false;q.visual=renderColumnAddition(q.a,q.b);
+  }
+  if(q.kind==='columnSubtraction'){
+    initColumnSubtraction(q.a,q.b);q.columnComplete=false;q.visual=renderColumnSubtraction();
+  }
+  if(q.kind==='interactiveEstimate')q.roundingChecks={A:false,B:false};
+  return q;
+}
+function startRetryMissed(){
+  if(!missedQuestions.length)return;
+  retryMode=true;retryQueue=missedQuestions.map(x=>JSON.parse(JSON.stringify(x)));retryIndex=0;retryAgain=[];locked=false;
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  loadRetryQuestion();
+}
+function loadRetryQuestion(){
+  if(retryIndex>=retryQueue.length)return finishRetrySession();
+  locked=false;matchState=null;subColumnState=null;
+  document.getElementById('feedback').textContent='';document.getElementById('feedback').className='feedback';
+  document.getElementById('hintBody').classList.remove('active');
+  current=prepareRetryQuestion(retryQueue[retryIndex]);
+  retryIndex++;
+  document.getElementById('roundNum').textContent=`↺ ${retryIndex}`;
+  showCurrentQuestion();
+  document.getElementById('skillChip').textContent=`Retry ${retryIndex} of ${retryQueue.length} · ${current.skillLabel}`;
+}
+function finishRetrySession(){
+  retryMode=false;
+  const total=retryQueue.length,still=retryAgain.length,corrected=total-still;
+  missedQuestions=retryAgain.map(x=>JSON.parse(JSON.stringify(x)));
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.remove('hidden');
+  document.getElementById('endSummary').textContent=still===0?`You corrected all ${total} missed question${total===1?'':'s'}!`:`You corrected ${corrected} of ${total} missed questions.`;
+  document.getElementById('endMessage').textContent=still===0?'Excellent — every missed staircase ward is now restored.':'A few are still tricky. You can retry just those questions again.';
+  const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=still?'inline-block':'none';btn.textContent=still?`↺ Retry ${still} Still Missed`:'↺ Retry Missed Questions'};
+  renderHistory();
+}
+function checkAnswer(){
+  if(locked||!current)return;
+  if((current.kind==='columnSubtraction'||current.kind==='columnAddition')&&!current.columnComplete){
+    setFeedback('Finish the column work first. Once the answer is complete, press Submit Answer.',false);return;
+  }
+  const input=document.getElementById('answerInput');
+  const raw=(current.kind==='columnSubtraction'||current.kind==='columnAddition')&&current.columnComplete
+      ? current.answer
+      : input.value.trim();
+  if(current.kind==='matchQuest'&&matchState&&!matchState.completed){setFeedback('Match all six scrolls first. Then enter the leftover result.',false);return}
+  if(!raw){setFeedback('Choose a spell tile or type an answer first.',false);return}
+  locked=true;
+  const acceptable=current.acceptableAnswers||[current.answer];
+  const ok=acceptable.some(a=>norm(a)===norm(raw));
+  if(ok){
+    streak++;score+=10+Math.min(streak-1,4)*2;
+    setFeedback(retryMode?'✨ Corrected! That staircase ward is secure.':`✨ Correct! The staircase snaps back into place. +${10+Math.min(streak-1,4)*2}`,true)
+  }else{
+    streak=0;
+    if(!retryMode){wrong++;score=Math.max(0,score-2);const snap=makeRetrySnapshot(current);if(snap)missedQuestions.push(snap)}
+    else{const snap=makeRetrySnapshot(current);if(snap)retryAgain.push(snap)}
+    setFeedback(`🌀 Not this time. Correct answer: ${current.answer}.`,false);document.getElementById('hintBody').classList.add('active')
+  }
+  addHistory(raw,ok);updateHUD();
+  setTimeout(loadQuestion,ok?1350:3300)
+}
+function setFeedback(t,ok){const f=document.getElementById('feedback');f.textContent=t;f.className='feedback '+(ok?'good':'bad')}
+function addHistory(user,ok){historyLog.push({time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),skill:current.skillLabel,question:current.question,user,answer:current.answer,correct:ok});historyLog=historyLog.slice(-100);localStorage.setItem('unit2StairHistory',JSON.stringify(historyLog));renderHistory()}
+function renderHistory(){const html=historyLog.length?historyLog.slice().reverse().slice(0,30).map(h=>`<div class="history-line"><strong>${h.skill}</strong>: ${h.question}<br>you: ${h.user} <span class="${h.correct?'good':'bad'}">${h.correct?'✓':'✗'}</span>${h.correct?'':` · answer ${h.answer}`}<div class="history-meta">${h.time}</div></div>`).join(''):'<div class="history-meta">No quests yet.</div>';['historyLines','homeHistoryLines','endHistoryLines'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html})}
+function toggleHint(){document.getElementById('hintBody').classList.toggle('active')}
+function toggleHistory(which){const id=which==='home'?'homeHistory':which==='end'?'endHistory':'gameHistory';document.getElementById(id).classList.toggle('active')}
+function resetHistory(){localStorage.removeItem('unit2StairHistory');historyLog=[];renderHistory()}
+function endGame(){document.getElementById('gameScreen').classList.add('hidden');document.getElementById('endScreen').classList.remove('hidden');document.getElementById('endSummary').textContent=`You earned ${score} House Points and restored ${totalRounds-wrong} of ${totalRounds} wards on the first try.`;document.getElementById('endMessage').textContent=wrong===0?'Perfect run — every staircase held firm.':wrong<=1?'Excellent work. Retry the missed questions to lock in the strategies.':'The castle is restored. Retry the missed questions and use the Strategy Charms to strengthen the trickier wards.';const btn=document.getElementById('retryMissedBtn');if(btn){btn.style.display=missedQuestions.length?'inline-block':'none';btn.textContent=missedQuestions.length?`↺ Retry ${missedQuestions.length} Missed Question${missedQuestions.length===1?'':'s'}`:'↺ Retry Missed Questions'}renderHistory()}
+historyLog=JSON.parse(localStorage.getItem('unit2StairHistory')||'[]');renderHistory();
+</script>
+</body>
+</html>
